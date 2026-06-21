@@ -331,6 +331,31 @@ oc get applications -n argocd -o custom-columns=NAME:.metadata.name,SYNC:.status
 
 Sub-apps deploy in wave order — operators first, then SMCP, then tracing and Kiali, then ingresses and sample-app.
 
+### Step 6: Verify the mesh is working with the sample-app
+
+Once everything is deployed, the `sample-app` component deploys Istio's standard **Bookinfo** demo application (`examples/infra/apps/service-mesh/clusters/ocp-dev1/apps/sample-app/`). It's a reference application bundled with OpenShift Service Mesh that proves your mesh is operational. It includes:
+
+- **Four microservices**: `productpage` (web UI), `details`, `reviews` (3 versions), and `ratings`
+- **Istio sidecars** injected into every pod
+- **A VirtualService** routing traffic to the `bookinfo-gateway` ingress
+- **DestinationRules** defining subsets (v1, v2, v3 of reviews) for traffic splitting
+
+This is your proof-of-concept that the mesh works — routing, sidecar injection, ingress, and authorization are all active. Run these commands to see it in action:
+
+```bash
+# Check the Bookinfo pods are running with sidecars
+oc get pods -n bookinfo
+
+# Find the Bookinfo route exposed through the mesh gateway
+oc get route -n mesh | grep bookinfo
+oc get virtualservice -n bookinfo
+
+# Open the productpage in your browser to see the full app
+open http://$(oc get route -n mesh -o jsonpath='{.items[?(@.spec.to.name=="bookinfo-ingress")].spec.host}')
+```
+
+You should see a web page showing book details, ratings, and reviews — with different review styles (no stars, black stars, red stars) depending on which version of the reviews service the mesh routes your request to. This routing is controlled entirely by the DestinationRules and VirtualServices in the sample-app templates.
+
 **Check your understanding:** The umbrella chart at `clusters/ocp-dev1/` contains `argo-applications` which creates 6 more ArgoCD Applications inside the cluster. This is the two-level GitOps pattern: the outer ApplicationSet manages the umbrella, the umbrella manages the components. What would you need to do to deploy this same mesh to a second cluster named `ocp-prod1`?
 
 ---
@@ -544,7 +569,7 @@ Since the `appteam1-appset` ApplicationSet uses a git generator scanning `apps/*
 
 | What | How | From tutorial |
 |------|-----|---------------|
-| `day2-services` ApplicationSet | Matrix generator (clusters × git dirs) — deploys the full service mesh via GitOps | Tutorial 3 |
+| `day2-services` ApplicationSet | Matrix generator (clusters × git dirs) — deploys the full service mesh via GitOps, including the Bookinfo sample-app as a POC to verify the mesh is working | Tutorial 3 |
 | `appteam1-appset` ApplicationSet | Git directory generator scanning `apps/*/environments/*` — auto-discovers apps and deploys per environment | Tutorial 3 |
 | `todo-stack` ApplicationSet | Matrix generator (components list × git dirs) with sync-wave ordering (DB→API→UI) — deploys all three in one namespace per environment | Tutorial 3 |
 | Path verification | Every Application points to a real directory with `Chart.yaml` + `values.yaml` | Tutorial 1 + 3 |

@@ -100,7 +100,7 @@ The OpenShift Service Mesh (OSSM) deployment in this project follows a layered a
 ├──────────────────────────────────────────────────┤
 │              Ingress Gateways (mesh)             │
 │   ┌──────────┐  ┌──────────┐  ┌────────────────┐ │
-│   │  wwt-gw  │  │ tempo-gw │  │ bookinfo-gw    │ │
+│   │  org-gw  │  │ tempo-gw │  │ bookinfo-gw    │ │
 │   │ + Authz  │  │          │  │ + Authz        │ │
 │   └──────────┘  └──────────┘  └────────────────┘ │
 ├──────────────────────────────────────────────────┤
@@ -452,7 +452,7 @@ helm dependency update helm-charts/sm-ingress
 helm upgrade --install ingresses helm-charts/sm-ingress \
   --namespace mesh \
   --create-namespace \
-  --values examples/infra/apps/service-mesh/dev/apps/ingresses/values.yaml
+  --values examples/infra/apps/service-mesh/clusters/ocp-dev1/apps/ingresses/values.yaml
 ```
 
 ### What Gets Created
@@ -628,7 +628,7 @@ helm upgrade --install kiali helm-charts/kiali -n istio-system
 # 5. Deploy Ingress Gateways
 helm upgrade --install ingresses helm-charts/sm-ingress -n mesh \
   --create-namespace \
-  -f examples/infra/apps/service-mesh/dev/apps/ingresses/values.yaml
+  -f examples/infra/apps/service-mesh/clusters/ocp-dev1/apps/ingresses/values.yaml
 
 # 6. Label a namespace to join the mesh
 oc label namespace my-namespace istio-injection=enabled

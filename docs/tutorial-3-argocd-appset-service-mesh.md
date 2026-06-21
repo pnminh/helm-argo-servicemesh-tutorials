@@ -66,7 +66,9 @@ In 2017, a team at Weaveworks published a set of principles that became known as
 
 ArgoCD is a Kubernetes-native GitOps controller. It runs inside your cluster and watches git repositories for changes.
 
-### Core Concepts
+### Understanding ArgoCD's Concepts
+
+Before diving into the YAML, here are the terms you'll hear throughout this tutorial:
 
 | Concept | What It Is |
 |---------|-----------|
@@ -232,11 +234,11 @@ spec:
 {{- end }}
 ```
 
-Key behaviors:
-- **Iterates** over `.Values.apps` — each app becomes one ArgoCD Application
-- **Sync wave** annotation controls deployment ordering
-- **Cluster name** is injected as a Helm template parameter (`tpl`)
-- Each app points to its own sub-directory (`path: {{ appsDir }}/{{ appName }}`)
+Here's what this template does:
+- It loops over every app you define in `.Values.apps`, creating one ArgoCD Application per app
+- Each Application gets a `sync-wave` annotation that controls deployment ordering
+- The cluster name is injected via `tpl`, a Helm function that evaluates template expressions inside values
+- Each Application points to its own sub-directory — `{{ appsDir }}/{{ appName }}`
 
 ### Values Format
 
@@ -246,7 +248,7 @@ The `argo-applications` chart accepts any number of apps with any names — you 
 
 ```yaml
 argo-applications:
-  appsDir: apps/service-mesh/dev/apps
+  appsDir: examples/infra/apps/service-mesh/clusters/ocp-dev1/apps
   apps:
     operators:
       namespace: openshift-operators
@@ -362,7 +364,7 @@ Generated Applications:
 | `{{ .server }}` | Clusters generator | `https://api.cluster.example.com:6443` |
 | `{{ .name }}` | Clusters generator | `ocp-dev1` |
 
-**Key insight:** The `global.clusterName` Helm parameter is injected so that every sub-chart can reference `{{ .Values.global.clusterName }}` to know which cluster it's deploying to.
+**Why this matters:** The `global.clusterName` parameter is injected so every sub-chart knows which cluster it's deploying to — `{{ .Values.global.clusterName }}` works anywhere.
 
 ---
 
@@ -428,7 +430,7 @@ The **umbrella chart** ties the `argo-applications` chart together with componen
 
 ### For the Infra Team (Service Mesh)
 
-The umbrella at `examples/infra/apps/service-mesh/dev/`:
+The umbrella at `examples/infra/apps/service-mesh/clusters/ocp-dev1/`:
 
 ```
 examples/infra/apps/service-mesh/
@@ -467,7 +469,7 @@ apps/my-stack/              ← you choose the name
 
 ### Umbrella Dependencies (Both Teams)
 
-File: `examples/infra/apps/service-mesh/dev/Chart.yaml`
+File: `examples/infra/apps/service-mesh/clusters/ocp-dev1/Chart.yaml`
 
 ```yaml
 apiVersion: v2
@@ -485,7 +487,7 @@ dependencies:
 
 ### Umbrella Chart Values
 
-File: `examples/infra/apps/service-mesh/dev/values.yaml`
+File: `examples/infra/apps/service-mesh/clusters/ocp-dev1/values.yaml`
 
 ```yaml
 argo-applications:
@@ -493,7 +495,7 @@ argo-applications:
   gitTargetRevision: multi-clusters
   argoProject: default
   namespace: argocd
-  appsDir: apps/service-mesh/dev/apps
+  appsDir: examples/infra/apps/service-mesh/clusters/ocp-dev1/apps
   apps:
     operators:
       namespace: openshift-operators
@@ -523,7 +525,7 @@ argo-applications:
 
 ### Sub-Chart Example: SMCP
 
-File: `examples/infra/apps/service-mesh/dev/apps/smcp/Chart.yaml`
+File: `examples/infra/apps/service-mesh/clusters/ocp-dev1/apps/smcp/Chart.yaml`
 
 ```yaml
 dependencies:
@@ -538,7 +540,7 @@ dependencies:
     repository: "file://../../../../../../helm-charts/library-chart"
 ```
 
-File: `examples/infra/apps/service-mesh/dev/apps/smcp/values.yaml`
+File: `examples/infra/apps/service-mesh/clusters/ocp-dev1/apps/smcp/values.yaml`
 
 ```yaml
 app-servicemesh:
@@ -606,13 +608,13 @@ You can also deploy directly using the umbrella chart for testing:
 
 ```bash
 # Update all sub-chart dependencies
-helm dependency update examples/infra/apps/service-mesh/dev
+helm dependency update examples/infra/apps/service-mesh/clusters/ocp-dev1
 
 # Template to see what would be created
-helm template service-mesh examples/infra/apps/service-mesh/dev
+helm template service-mesh examples/infra/apps/service-mesh/clusters/ocp-dev1
 
 # Or deploy directly (for dev/testing)
-helm upgrade --install service-mesh examples/infra/apps/service-mesh/dev
+helm upgrade --install service-mesh examples/infra/apps/service-mesh/clusters/ocp-dev1
 ```
 
 ---

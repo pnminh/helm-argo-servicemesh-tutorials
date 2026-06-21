@@ -88,9 +88,7 @@ Helm is a **package manager and templating engine** for Kubernetes — like `apt
 | **Values** | Parameters you pass to customize a chart (`values.yaml`) |
 | **Template** | A YAML file with `{{ }}` placeholders that get replaced at install time |
 
-**Key trait:** Helm uses **Go templates** (`{{ }}` syntax) inside YAML. This means you can use `if` statements, `range` loops, and function calls inside your Kubernetes manifests.
-
-> **How it works — the mail-merge analogy:** Helm is like a mail-merge. You write one document with blanks like `{{ .Values.replicaCount }}` (the template). Your `values.yaml` is the spreadsheet holding the actual numbers. `helm install` runs the merge, producing one finished YAML per deployment.
+The important thing to know is that Helm uses **Go templates** — the `{{ }}` syntax you see inside YAML files. This means your templates can contain `if` statements, `range` loops, and function calls, just like a programming language. For example, you can say "if blue-green is enabled, create a Rollout instead of a Deployment."
 
 ```
 You write:
@@ -108,13 +106,11 @@ Helm fills in the templates with your values (like running mail-merge)
 Final Kubernetes YAML is applied to the cluster (like sending the personalized letters)
 ```
 
-**Key trait:** Helm uses **Go templates** (`{{ }}` syntax) inside YAML. This means you can use `if` statements, `range` loops, and function calls inside your Kubernetes manifests.
-
 ### What Is Kustomize?
 
-Kustomize takes a different approach from Helm. Instead of templating (filling in blanks), it uses **YAML patching and overlays**. You write plain YAML with no placeholders, then apply "patches" that override specific fields per environment.
+Kustomize takes a different approach from Helm. Instead of filling in blanks, it uses **YAML patching and overlays**. You write plain YAML with no placeholders, then apply patches that override specific fields per environment.
 
-**Core concepts:**
+Here are the key pieces:
 
 | Concept | What It Is |
 |---------|-----------|
@@ -122,7 +118,7 @@ Kustomize takes a different approach from Helm. Instead of templating (filling i
 | **Overlay** | A patch that modifies the base for a specific environment |
 | **Kustomization** | A file listing which bases and overlays to combine |
 
-**Key trait:** Kustomize does **not** use templates. There are no `{{ }}` directives, no `if` statements, no loops. It works with pure YAML and applies strategic merge patches.
+Unlike Helm, Kustomize has no `{{ }}` directives, no `if` statements, no loops — just pure YAML.
 
 > **Metaphor:** Kustomize is like a set of transparent overlays on a blueprint. The base is a complete architectural drawing. For the dev version, you lay a transparency on top that changes one wall. For prod, a different transparency changes another. You never redraw the original.
 
@@ -145,8 +141,6 @@ Original YAML + patches merged together
     ↓
 Final Kubernetes YAML (no placeholders anywhere)
 ```
-
-**Key trait:** Kustomize does **not** use templates. There are no `{{ }}` directives, no `if` statements, no loops. It works with pure YAML and applies strategic merge patches — like applying a set of transparent overlays to a base image.
 
 ### Side-by-Side Comparison
 
