@@ -113,7 +113,7 @@ Learn GitOps from first principles — the push vs pull deployment models, why A
 
 ---
 
-### [Tutorial 4: Capstone — Deploying a Todo App Stack](tutorial-4-appteam-todo-app.md)
+### [Tutorial 4: Capstone — Deploying a Todo App Stack](./docs/tutorial-4-appteam-todo-app.md)
 
 **Level:** Beginner–Intermediate · **Role:** App team
 
