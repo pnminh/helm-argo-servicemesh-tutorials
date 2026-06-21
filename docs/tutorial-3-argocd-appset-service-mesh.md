@@ -79,14 +79,14 @@ ArgoCD is a Kubernetes-native GitOps controller. It runs inside your cluster and
 ### How One ArgoCD Application Works
 
 ```
-┌──────────┐       ┌───────────────┐       ┌─────────────────┐
-│ Git Repo │──────▶│    ArgoCD      │──────▶│ Kubernetes      │
-│          │       │  (controller)  │       │  Cluster        │
-│ values/  │       │                │       │                 │
+┌──────────┐       ┌─────────────────┐       ┌─────────────────┐
+│ Git Repo │──────▶│    ArgoCD       │──────▶│ Kubernetes      │
+│          │       │  (controller)   │       │  Cluster        │
+│ values/  │       │                 │       │                 │
 │ charts/  │       │ 1. Compares git │       │ 3. Live state   │
-│ apps/    │       │    vs cluster   │       │    matches git   │
+│ apps/    │       │    vs cluster   │       │    matches git  │
 └──────────┘       │ 2. Applies diff │       └─────────────────┘
-                   └───────────────┘
+                   └─────────────────┘
 ```
 
 Every 3 minutes (configurable), ArgoCD:
@@ -155,16 +155,16 @@ The same pattern appears everywhere: components with dependencies need ordered d
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      ApplicationSet                                  │
-│                (matrix: clusters × git directories)                  │
-│                                                                      │
-│        Generates ArgoCD Applications for every combination           │
-│                                                                      │
-│   Infra team example:                App team example:               │
-│   ┌──────────┐ ┌────────┐           ┌──────────┐ ┌──────────┐      │
-│   │ operators│ │  smcp  │           │ todo-db  │ │ todo-api │      │
-│   │ wave: 0  │ │wave: 2 │           │ wave: 0  │ │ wave: 1  │      │
-│   └──────────┘ └────────┘           └──────────┘ └──────────┘      │
+│                      ApplicationSet                                 │
+│                (matrix: clusters × git directories)                 │
+│                                                                     │
+│        Generates ArgoCD Applications for every combination          │
+│                                                                     │
+│   Infra team example:                App team example:              │
+│   ┌──────────┐ ┌────────┐           ┌──────────┐ ┌──────────┐       │
+│   │ operators│ │  smcp  │           │ todo-db  │ │ todo-api │       │
+│   │ wave: 0  │ │wave: 2 │           │ wave: 0  │ │ wave: 1  │       │
+│   └──────────┘ └────────┘           └──────────┘ └──────────┘       │
 │   ┌──────────┐ ┌──────────┐         ┌──────────┐                    │
 │   │ tracing  │ │ingresses │         │ todo-ui  │                    │
 │   │wave: 3   │ │wave: 4   │         │ wave: 2  │                    │

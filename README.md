@@ -30,26 +30,26 @@ In a microservice world, every service needs TLS encryption, retry logic, metric
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    APP TEAMS (Tutorial 4)                     │
+│                    APP TEAMS (Tutorial 4)                    │
 │                                                              │
 │   deploy apps with a simple values.yaml.                     │
 │   mesh, security, observability come for free.               │
 ├──────────────────────────────────────────────────────────────┤
-│                  SERVICE MESH (Tutorial 2)                    │
+│                  SERVICE MESH (Tutorial 2)                   │
 │                                                              │
 │   mTLS, tracing, metrics, auth — configured once by infra.   │
 │   app teams never touch it.                                  │
 ├──────────────────────────────────────────────────────────────┤
-│                  GITOPS / ARGOCD (Tutorial 3)                  │
+│                  GITOPS / ARGOCD (Tutorial 3)                │
 │                                                              │
-│   everything is driven by git.                                │
+│   everything is driven by git.                               │
 │   ArgoCD ensures the cluster matches the repo.               │
 │   Works for infra services and application deployments.      │
 ├──────────────────────────────────────────────────────────────┤
-│                  HELM CHARTS (Tutorial 1)                     │
+│                  HELM CHARTS (Tutorial 1)                    │
 │                                                              │
-│   reusable templates (library-chart).                         │
-│   standardized Deployments, Services, HPAs for every app.     │
+│   reusable templates (library-chart).                        │
+│   standardized Deployments, Services, HPAs for every app.    │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -66,7 +66,7 @@ Beginner                    Intermediate              Advanced
 │  Helm Chart      │       │  Service Mesh    │     │ 3        │
 │  Reusability     │       │  Installation    │     │ ArgoCD   │
 └──────────────────┘       └──────────────────┘     │ AppSet   │
-       │                                             └──────────┘
+       │                                            └──────────┘
        │                                                   │
        ▼                                                   │
 ┌──────────────────┐                                       │

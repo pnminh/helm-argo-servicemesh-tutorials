@@ -57,14 +57,14 @@ A service mesh solves these problems by **moving networking logic out of your ap
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                      Pod                             │
+│                      Pod                            │
 │                                                     │
 │  ┌──────────┐         ┌──────────────────────────┐  │
-│  │  Your App │ ──────▶│   Sidecar Proxy (Envoy)   │──┼──▶ Network
-│  │ Container │         │  - mTLS                   │  │
-│  │           │ ◀──────│  - Retries / Timeouts      │  │
-│  │           │         │  - Metrics / Tracing       │  │
-│  │           │         │  - Authorization           │  │
+│  │  Your App│ ──────▶ │   Sidecar Proxy (Envoy)  │──┼──▶ Network
+│  │ Container│         │  - mTLS                  │  │
+│  │          │ ◀────── │  - Retries / Timeouts    │  │
+│  │          │         │  - Metrics / Tracing     │  │
+│  │          │         │  - Authorization         │  │
 │  └──────────┘         └──────────────────────────┘  │
 └─────────────────────────────────────────────────────┘
 ```
@@ -95,21 +95,21 @@ The OpenShift Service Mesh (OSSM) deployment in this project follows a layered a
 
 ```
 ┌──────────────────────────────────────────────────┐
-│              Application Namespaces               │
-│   (istio-injection=enabled, ServiceMeshMember)    │
+│              Application Namespaces              │
+│   (istio-injection=enabled, ServiceMeshMember)   │
 ├──────────────────────────────────────────────────┤
-│              Ingress Gateways (mesh)              │
+│              Ingress Gateways (mesh)             │
 │   ┌──────────┐  ┌──────────┐  ┌────────────────┐ │
 │   │  wwt-gw  │  │ tempo-gw │  │ bookinfo-gw    │ │
 │   │ + Authz  │  │          │  │ + Authz        │ │
 │   └──────────┘  └──────────┘  └────────────────┘ │
 ├──────────────────────────────────────────────────┤
-│              Control Plane (istio-system)          │
+│              Control Plane (istio-system)        │
 │   ┌──────────┐  ┌───────┐  ┌───────────────────┐ │
-│   │  istiod  │  │ Kiali │  │ Telemetry (Tempo)  │ │
+│   │  istiod  │  │ Kiali │  │ Telemetry (Tempo) │ │
 │   └──────────┘  └───────┘  └───────────────────┘ │
 ├──────────────────────────────────────────────────┤
-│              Operators (openshift-operators)       │
+│              Operators (openshift-operators)     │
 │   ┌──────────┐  ┌──────────────┐  ┌────────────┐ │
 │   │ OSSM     │  │ Tempo        │  │ Kiali      │ │
 │   └──────────┘  └──────────────┘  └────────────┘ │
