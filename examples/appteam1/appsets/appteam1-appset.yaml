@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: dev-appset
+  name: appteam1-appset
   namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
   - git:
-      repoURL: https://github.com/pnminh/app-gitops-configs.git
-      revision: tekton
+      repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
+      revision: master
       directories:
-      - path: apps/*/environments/*
+      - path: examples/appteam1/apps/*/environments/*
   template:      
     metadata:
       name: '{{index .path.segments 1}}-{{.path.basenameNormalized}}' 
@@ -22,8 +22,8 @@ spec:
       # Source of the application manifests
       source:
         repoURL: https://github.com/pnminh/app-gitops-configs.git
-        targetRevision: tekton
-        path: 'apps/{{index .path.segments 1}}'
+        targetRevision: master
+        path: 'examples/appteam1/apps/{{index .path.segments 1}}'
         helm:
           valueFiles:
             - "values.yaml"

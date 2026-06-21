@@ -14,10 +14,10 @@ spec:
                 matchLabels:
                   argocd.argoproj.io/secret-type: cluster
           - git:
-              repoURL: https://github.example-org.com/gitops/day2-services.git
-              revision: multi-clusters
+              repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
+              revision: main
               directories:
-                - path: apps/*/{{.name}}
+                - path: examples/infra/apps/*/{{.name}}
   template:
     metadata:
       name: "day2-{{index .path.segments 1}}-{{.path.basenameNormalized}}"
@@ -26,13 +26,12 @@ spec:
       project: default
       # Source of the application manifests
       source:
-        repoURL: https://github.example-org.com/gitops/day2-services.git
-        targetRevision: multi-clusters
-        path: "apps/{{index .path.segments 1}}/{{index .path.segments 2}}"
+        repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
+        targetRevision: main
+        path: "examples/infra/apps/{{index .path.segments 1}}/environments/{{index .path.segments 2}}"
         helm:
           valueFiles:
             - "values.yaml"
-            - "../values.yaml"
           ignoreMissingValueFiles: true
           parameters:
             - name: "global.clusterName"
