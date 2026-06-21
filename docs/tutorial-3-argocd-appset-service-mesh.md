@@ -344,23 +344,23 @@ spec:
 The generator produces a **Cartesian product** of clusters × directories:
 
 ```
-Clusters: [us-dc1-lab-devexp, ocp-snd-spoke1]
-Directories: [apps/service-mesh/us-dc1-lab-devexp, apps/iam-auth-controller/ocp-snd-spoke1]
+Clusters: [ocp-dev1, ocp-prod1]
+Directories: [apps/service-mesh/ocp-dev1, apps/iam-auth-controller/ocp-prod1]
                               ↓
 Generated Applications:
-  - day2-service-mesh-us-dc1-lab-devexp  → deploys to us-dc1-lab-devexp cluster
-  - day2-iam-auth-controller-ocp-snd-spoke1 → deploys to ocp-snd-spoke1 cluster
+  - day2-service-mesh-ocp-dev1  → deploys to ocp-dev1 cluster
+  - day2-iam-auth-controller-ocp-prod1 → deploys to ocp-prod1 cluster
 ```
 
 ### Template Parameters Available
 
 | Parameter | Source | Example Value |
 |-----------|--------|---------------|
-| `{{ .path.basenameNormalized }}` | Git generator | `us-dc1-lab-devexp` |
+| `{{ .path.basenameNormalized }}` | Git generator | `ocp-dev1` |
 | `{{ index .path.segments 1 }}` | Git generator path segments | `service-mesh` |
-| `{{ index .path.segments 2 }}` | Git generator path segments | `us-dc1-lab-devexp` |
+| `{{ index .path.segments 2 }}` | Git generator path segments | `ocp-dev1` |
 | `{{ .server }}` | Clusters generator | `https://api.cluster.example.com:6443` |
-| `{{ .name }}` | Clusters generator | `us-dc1-lab-devexp` |
+| `{{ .name }}` | Clusters generator | `ocp-dev1` |
 
 **Key insight:** The `global.clusterName` Helm parameter is injected so that every sub-chart can reference `{{ .Values.global.clusterName }}` to know which cluster it's deploying to.
 
@@ -579,11 +579,11 @@ oc get applications -n argocd -w
 You should see applications appearing for each cluster × component combination:
 
 ```
-day2-operators-us-dc1-lab-devexp
-day2-smcp-us-dc1-lab-devexp
-day2-tracing-system-us-dc1-lab-devexp
-day2-kiali-us-dc1-lab-devexp
-day2-ingresses-us-dc1-lab-devexp
+day2-operators-ocp-dev1
+day2-smcp-ocp-dev1
+day2-tracing-system-ocp-dev1
+day2-kiali-ocp-dev1
+day2-ingresses-ocp-dev1
 ```
 
 ### Step 3: Monitor Sync Progress

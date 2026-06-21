@@ -2,7 +2,7 @@ app-servicemesh:
   enabled: true
 sm-ingress:
   ingresses:
-   bookinfo-ingress:
+    bookinfo-ingress:
       service:
         ports:
           - name: http2
@@ -27,7 +27,7 @@ sm-ingress:
         authorization:
           enabled: true
           action: custom
-          provider: 
+          provider:
             name: example-org-ext-authz-http
           rules:
             - to:

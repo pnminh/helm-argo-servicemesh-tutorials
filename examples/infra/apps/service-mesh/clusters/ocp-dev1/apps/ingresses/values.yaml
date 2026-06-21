@@ -30,17 +30,11 @@ sm-ingress:
           - name: example-org-gateway-default-tls
             configs:
               externalSecretStoreRef:
-                #kind: ClusterSecretStore #optional
                 name: example-org-store
-                #tlsCertRemoteKey:  example-org-ingress-tls-cert #optional default [certName]-cert
-                #tlsKeyRemoteKey:  example-org-ingress-tls-key #optional default [certName]-key
           - name: example-org-gateway-apps-dev-tls
             configs:
               externalSecretStoreRef:
-                #kind: ClusterSecretStore #optional
                 name: example-org-store
-                #tlsCertRemoteKey:  example-org-ingress-tls-cert #optional default [certName]-cert
-                #tlsKeyRemoteKey:  example-org-ingress-tls-key #optional default [certName]-key
         servers:
           - hosts:
               - "*.apps-dev.example-org.com"

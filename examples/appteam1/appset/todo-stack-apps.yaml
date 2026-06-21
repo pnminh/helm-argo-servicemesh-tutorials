@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: todo-stack
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - component: todo-db
+                  syncWave: "0"
+                - component: todo-api
+                  syncWave: "1"
+                - component: todo-ui
+                  syncWave: "2"
+          - git:
+              repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
+              revision: main
+              directories:
+                - path: examples/appteam1/apps/todo-db/environments/*
+  template:
+    metadata:
+      name: "todo-stack-{{ .component }}-{{ .path.basenameNormalized }}"
+      annotations:
+        argocd.argoproj.io/sync-wave: "{{ .syncWave }}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
+        targetRevision: main
+        path: "examples/appteam1/apps/{{ .component }}"
+        helm:
+          valueFiles:
+            - values.yaml
+            - "environments/{{ .path.basenameNormalized }}/values.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "todo-stack-{{ .path.basenameNormalized }}"
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true

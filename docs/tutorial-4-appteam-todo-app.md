@@ -22,11 +22,12 @@ This is the capstone. Tutorial 1 taught you reusable Helm charts. Tutorial 2 gav
 
 ### Part 2 — Switch to ArgoCD
 9. [From Helm CLI to ArgoCD: Why Automate?](#9-from-helm-cli-to-argocd-why-automate)
-10. [Exercise 6: Create an ApplicationSet for AppTeam1 Apps](#10-exercise-6-create-an-applicationset-for-appteam1-apps)
-11. [Exercise 7: Create a `todo-stack` App with Sync Waves](#11-exercise-7-create-a-todo-stack-app-with-sync-waves)
-12. [Exercise 8: Verify Paths and Deploy via ArgoCD](#12-exercise-8-verify-paths-and-deploy-via-argocd)
-13. [Exercise 9: Bootstrap a New App](#13-exercise-9-bootstrap-a-new-app)
-14. [What You Just Built](#14-what-you-just-built)
+10. [Exercise 6: Deploy Service Mesh via ArgoCD](#10-exercise-6-deploy-service-mesh-via-argocd)
+11. [Exercise 7: Understand the AppTeam1 ApplicationSet](#11-exercise-7-understand-the-appteam1-applicationset)
+12. [Exercise 8: Understand the `todo-stack` ApplicationSet](#12-exercise-8-understand-the-todo-stack-applicationset)
+13. [Exercise 9: Verify Paths and Deploy via ArgoCD](#13-exercise-9-verify-paths-and-deploy-via-argocd)
+14. [Exercise 10: Bootstrap a New App](#14-exercise-10-bootstrap-a-new-app)
+15. [What You Just Built](#15-what-you-just-built)
 
 ---
 
@@ -260,156 +261,163 @@ But what happens when you have three clusters? Or when you need to ensure that w
 The key insight: **ArgoCD uses the exact same Helm charts you just deployed.** It doesn't need new templates, new repos, or new processes. It reads your `Chart.yaml`, finds your `values.yaml`, runs `helm template` under the hood, and applies the result. The only difference is *who clicks the button* — instead of you running `helm install`, ArgoCD watches git and does it for you.
 
 In this part, you'll:
-1. Create an ApplicationSet for all AppTeam1 apps
-2. Create a `todo-stack` application that deploys all three components with sync-wave ordering
-3. Verify the paths and value files are correct
-4. Deploy everything via ArgoCD
+1. Deploy the service mesh via the `day2-services` ApplicationSet — the same mesh from Tutorial 2, now GitOps-driven
+2. Walk through the `appteam1-appset` ApplicationSet that auto-discovers apps per environment
+3. Walk through the `todo-stack` ApplicationSet with sync-wave ordering
+4. Verify paths and value files, then deploy everything via ArgoCD
 
 ---
 
-## 10. Exercise 6: Create an ApplicationSet for AppTeam1 Apps
+## 10. Exercise 6: Deploy Service Mesh via ArgoCD
 
-**Goal:** Write an ApplicationSet that tells ArgoCD "watch the `examples/appteam1/apps/` directory and create one Application per sub-directory."
+**Goal:** Deploy the same service mesh you set up manually in Tutorial 2 — but this time via the `day2-services` ApplicationSet, letting ArgoCD handle everything. You'll see how the infra team organizes cluster-specific deployments under `clusters/<name>/` and how the ApplicationSet discovers them automatically.
 
-### Step 1: Create the ApplicationSet YAML
+The ApplicationSet already exists at `examples/infra/appset/day2-services.yaml`. It uses a matrix generator that combines every cluster ArgoCD knows about with every `clusters/*` directory found in git.
+
+### Step 1: Look at the directory structure
 
 ```bash
-mkdir -p examples/appteam1/appset
-cat > examples/appteam1/appset/appteam1-apps.yaml << 'EOF'
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: appteam1-apps
-  namespace: argocd
-spec:
-  goTemplate: true
-  generators:
-    - git:
-        repoURL: https://github.example-org.com/gitops/tutorials.git
-        revision: main
-        directories:
-          - path: examples/appteam1/apps/*
-  template:
-    metadata:
-      name: 'appteam1-{{ .path.basename }}'
-    spec:
-      project: default
-      source:
-        repoURL: https://github.example-org.com/gitops/tutorials.git
-        targetRevision: main
-        path: '{{ .path.path }}'
-        helm:
-          valueFiles:
-            - values.yaml
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{ .path.basename }}'
-      syncPolicy:
-        syncOptions:
-          - CreateNamespace=true
-        automated:
-          prune: true
-          selfHeal: true
-EOF
+ls examples/infra/apps/service-mesh/clusters/
 ```
 
-### Step 2: How it works
+You should see `ocp-dev1/`. Inside it sits the umbrella chart with `Chart.yaml` and `values.yaml` — the same chart structure you've been using all along.
 
-The git directory generator scans `examples/appteam1/apps/` and finds every sub-directory — `todo-api/`, `todo-db/`, `todo-ui/`. For each one, it creates an ArgoCD Application that:
+### Step 2: Read the ApplicationSet
+
+```bash
+cat examples/infra/appset/day2-services.yaml
+```
+
+### Step 3: How it works
+
+The matrix generator combines two sources:
+- **Clusters generator** — discovers every cluster registered with ArgoCD (provides `{{ .server }}` and `{{ .name }}`)
+- **Git generator** — scans `examples/infra/apps/*/clusters/*` for any cluster directory under any service
+
+For a cluster named `ocp-dev1`, and a git directory `examples/infra/apps/service-mesh/clusters/ocp-dev1`: the matrix generates one Application named `day2-service-mesh-ocp-dev1`. Add another cluster directory like `clusters/ocp-prod1/` and a second Application appears automatically.
+
+The umbrella chart at that path depends on `argo-applications`, which generates 6 ArgoCD Applications with sync-wave ordering:
+
+| Wave | Component | Namespace |
+|------|-----------|-----------|
+| 0 | `operators` | `openshift-operators` |
+| 2 | `smcp` | `istio-system` |
+| 3 | `tracing-system` | `tracing-system` |
+| 3 | `kiali` | `istio-system` |
+| 4 | `ingresses` | `mesh` |
+| 4 | `sample-app` | `bookinfo` |
+
+### Step 4: Apply and watch
+
+```bash
+oc apply -f examples/infra/appset/day2-services.yaml
+oc get applications -n argocd | grep day2
+```
+
+Expected output:
+
+```
+day2-service-mesh-ocp-dev1    OutOfSync
+```
+
+### Step 5: Sync and watch the mesh come up
+
+```bash
+oc argocd app sync day2-service-mesh-ocp-dev1
+
+# The umbrella deploys argo-applications, which creates 6 sub-apps
+oc get applications -n argocd -o custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,WAVE:.metadata.annotations.argocd\.argoproj\.io/sync-wave
+```
+
+Sub-apps deploy in wave order — operators first, then SMCP, then tracing and Kiali, then ingresses and sample-app.
+
+**Check your understanding:** The umbrella chart at `clusters/ocp-dev1/` contains `argo-applications` which creates 6 more ArgoCD Applications inside the cluster. This is the two-level GitOps pattern: the outer ApplicationSet manages the umbrella, the umbrella manages the components. What would you need to do to deploy this same mesh to a second cluster named `ocp-prod1`?
+
+---
+
+## 11. Exercise 7: Understand the AppTeam1 ApplicationSet
+
+**Goal:** Walk through the existing `appteam1-appset.yaml` and understand how it discovers apps, loads environment-specific values, and deploys per-environment.
+
+The file already exists at `examples/appteam1/appset/appteam1-appset.yaml`. Let's read it:
+
+```bash
+cat examples/appteam1/appset/appteam1-appset.yaml
+```
+
+### How it works
+
+The git directory generator scans `examples/appteam1/apps/*/environments/*`. The first `*` matches the app name (`todo-api`, `todo-db`, `todo-ui`), the second `*` matches the environment (`dev`, `stage`, `prod`). For every app × environment combination, it creates one ArgoCD Application.
 
 | Field | Value | How it's generated |
 |-------|-------|-------------------|
-| **Name** | `appteam1-todo-api` | `{{ .path.basename }}` — the last segment of the path |
-| **Path** | `examples/appteam1/apps/todo-api` | `{{ .path.path }}` — the full directory path |
-| **Namespace** | `todo-api` | Same as the directory name |
+| **Name** | `todo-api-dev` | `{{ index .path.segments 3 }}` (app) + `-` + `.path.basenameNormalized` (env) |
+| **Path** | `examples/appteam1/apps/todo-api` | `examples/appteam1/apps/{{ index .path.segments 3 }}` |
+| **Values** | `values.yaml` + `environments/dev/values.yaml` | Base values merged with env-specific overrides |
+| **Namespace** | `dev` | `.path.basenameNormalized` — all dev apps share one namespace |
+| **ReleaseName** | `todo-api` | `{{ index .path.segments 3 }}` |
 
-This is the same pattern you studied in Tutorial 3, §4-6. The only difference: instead of deploying infrastructure services, you're deploying app components.
+This generates 9 Applications (3 apps × 3 environments):
 
-### Step 3: Apply and verify
+```
+todo-api-dev        todo-api-stage         todo-api-prod
+todo-db-dev         todo-db-stage          todo-db-prod
+todo-ui-dev         todo-ui-stage          todo-ui-prod
+```
+
+### Step 1: Apply and verify
 
 ```bash
-oc apply -f examples/appteam1/appset/appteam1-apps.yaml
-oc get applications -n argocd | grep appteam1
+oc apply -f examples/appteam1/appset/appteam1-appset.yaml
+oc get applications -n argocd | grep -E "todo-api.dev|todo-db.dev|todo-ui.dev"
 ```
 
-Expected output — three Applications should appear:
+Expected output — three dev Applications should appear:
 
 ```
-appteam1-todo-db      OutOfSync
-appteam1-todo-api     OutOfSync
-appteam1-todo-ui      OutOfSync
+todo-api-dev         OutOfSync
+todo-db-dev          OutOfSync
+todo-ui-dev          OutOfSync
 ```
 
-They begin as `OutOfSync` because ArgoCD hasn't deployed them yet. Let's fix that next.
+They begin as `OutOfSync` because ArgoCD hasn't deployed them yet.
+
+### Step 2: Sync one app and verify
+
+```bash
+# Sync the database for dev environment
+oc argocd app sync todo-db-dev
+
+# Watch it deploy
+oc get pods -n dev -w
+```
 
 ---
 
-## 11. Exercise 7: Create a `todo-stack` App with Sync Waves
+## 12. Exercise 8: Understand the `todo-stack` ApplicationSet
 
-**Goal:** Create a single ApplicationSet called `todo-stack` that deploys all three components with sync-wave ordering: database first (wave 0), API second (wave 1), UI third (wave 2).
+**Goal:** Understand the existing `todo-stack-apps.yaml` — an ApplicationSet that deploys all three components with sync-wave ordering, templated across dev/stage/prod environments.
 
-This is where you apply the sync-wave pattern from Tutorial 3, §7. Instead of separate apps with no ordering, you create one app that respects dependencies.
+This is where you apply the sync-wave pattern from Tutorial 3, §7. The file already exists at `examples/appteam1/appset/todo-stack-apps.yaml`.
 
-### Step 1: Create the ApplicationSet
+### Step 1: Read the file
 
 ```bash
-cat > examples/appteam1/appset/todo-stack-apps.yaml << 'EOF'
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: todo-stack
-  namespace: argocd
-spec:
-  goTemplate: true
-  generators:
-    - list:
-        elements:
-          - component: todo-db
-            namespace: todo-stack
-            syncWave: "0"
-          - component: todo-api
-            namespace: todo-stack
-            syncWave: "1"
-          - component: todo-ui
-            namespace: todo-stack
-            syncWave: "2"
-  template:
-    metadata:
-      name: 'todo-stack-{{ .component }}'
-      annotations:
-        argocd.argoproj.io/sync-wave: '{{ .syncWave }}'
-    spec:
-      project: default
-      source:
-        repoURL: https://github.example-org.com/gitops/tutorials.git
-        targetRevision: main
-        path: 'examples/appteam1/apps/{{ .component }}'
-        helm:
-          valueFiles:
-            - values.yaml
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{ .namespace }}'
-      syncPolicy:
-        syncOptions:
-          - CreateNamespace=true
-        automated:
-          prune: true
-          selfHeal: true
-EOF
+cat examples/appteam1/appset/todo-stack-apps.yaml
 ```
+
+It uses a **matrix generator** combining a list of components (with sync waves) with a **git directory generator** that scans `todo-db/environments/*` to dynamically discover environments. Add a new `environments/qa` directory to any app, and the generator picks it up automatically — just like `appteam1-appset.yaml`. The matrix produces 3 × N Applications (3 components × however many environments exist).
 
 ### Step 2: How it works
 
-Unlike the directory generator (which auto-discovers apps), this uses a **list generator** — you explicitly list each component and its sync wave. The generator produces three Applications:
+| Application | Sync Wave | Path | Values loaded | Namespace |
+|-------------|-----------|------|--------------|-----------|
+| `todo-stack-todo-db-dev` | 0 | `examples/appteam1/apps/todo-db` | `values.yaml` + `environments/dev/values.yaml` | `todo-stack-dev` |
+| `todo-stack-todo-db-stage` | 0 | same | `values.yaml` + `environments/stage/values.yaml` | `todo-stack-stage` |
+| `todo-stack-todo-db-prod` | 0 | same | `values.yaml` + `environments/prod/values.yaml` | `todo-stack-prod` |
+| *(same for todo-api at wave 1, todo-ui at wave 2)* | | | | |
 
-| Application | Sync Wave | Path | Namespace |
-|-------------|-----------|------|-----------|
-| `todo-stack-todo-db` | 0 | `examples/appteam1/apps/todo-db` | `todo-stack` |
-| `todo-stack-todo-api` | 1 | `examples/appteam1/apps/todo-api` | `todo-stack` |
-| `todo-stack-todo-ui` | 2 | `examples/appteam1/apps/todo-ui` | `todo-stack` |
-
-The sync waves enforce order: ArgoCD starts wave-0 (`todo-db`) first. Once it's healthy, wave-1 (`todo-api`) begins. Once that's healthy, wave-2 (`todo-ui`) begins.
+The sync waves enforce order **within each environment**: database first (wave 0), API second (wave 1), UI third (wave 2).
 
 ### Step 3: Apply
 
@@ -420,7 +428,7 @@ oc get applications -n argocd | grep todo-stack
 
 ---
 
-## 12. Exercise 8: Verify Paths and Deploy via ArgoCD
+## 13. Exercise 9: Verify Paths and Deploy via ArgoCD
 
 **Goal:** Before syncing, verify that every Application points to the correct paths and value files. Then sync and watch the stack come up in order.
 
@@ -428,18 +436,18 @@ oc get applications -n argocd | grep todo-stack
 
 ```bash
 # Check which git path each Application points to
-oc get applications -n argocd -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.source.path}{"\n"}{end}' | grep -E "appteam1|todo-stack"
+oc get applications -n argocd -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.source.path}{"\n"}{end}' | grep -E "todo-(api|db|ui)-"
 ```
 
 Expected — every Application should point to a path that actually exists in your repo:
 
 ```
-appteam1-todo-db         examples/appteam1/apps/todo-db
-appteam1-todo-api        examples/appteam1/apps/todo-api
-appteam1-todo-ui         examples/appteam1/apps/todo-ui
-todo-stack-todo-db       examples/appteam1/apps/todo-db
-todo-stack-todo-api      examples/appteam1/apps/todo-api
-todo-stack-todo-ui       examples/appteam1/apps/todo-ui
+todo-api-dev             examples/appteam1/apps/todo-api
+todo-db-dev              examples/appteam1/apps/todo-db
+todo-ui-dev              examples/appteam1/apps/todo-ui
+todo-stack-todo-db-dev    examples/appteam1/apps/todo-db
+todo-stack-todo-api-dev   examples/appteam1/apps/todo-api
+todo-stack-todo-ui-dev    examples/appteam1/apps/todo-ui
 ```
 
 ### Step 2: Verify value files
@@ -456,31 +464,31 @@ done
 
 ```bash
 # Sync all todo-stack apps
-oc argocd app sync todo-stack-todo-db
-oc argocd app sync todo-stack-todo-api
-oc argocd app sync todo-stack-todo-ui
+oc argocd app sync todo-stack-todo-db-dev
+oc argocd app sync todo-stack-todo-api-dev
+oc argocd app sync todo-stack-todo-ui-dev
 
 # Watch them deploy in order
 oc get applications -n argocd -o custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,WAVE:.metadata.annotations.argocd\.argoproj\.io/sync-wave | grep todo-stack
 
 # Expected progression:
-# 1. Wave 0 → todo-stack-todo-db syncs first
-# 2. Wave 1 → todo-stack-todo-api syncs next
-# 3. Wave 2 → todo-stack-todo-ui syncs last
+# 1. Wave 0 → todo-stack-todo-db-dev syncs first
+# 2. Wave 1 → todo-stack-todo-api-dev syncs next
+# 3. Wave 2 → todo-stack-todo-ui-dev syncs last
 ```
 
 ### Step 4: Verify in the cluster
 
 ```bash
-oc get pods -n todo-stack
-oc get svc -n todo-stack
+oc get pods -n todo-stack-dev
+oc get svc -n todo-stack-dev
 ```
 
-**Check your understanding:** Why do the `todo-stack` apps all deploy to the same namespace (`todo-stack`) while the `appteam1-*` apps each deploy to separate namespaces? Which generator field controls the namespace?
+**Check your understanding:** Why do the `todo-stack` apps all deploy to the same namespace (`todo-stack-dev`) while the `appteam1-appset` apps deploy per-environment (`dev`, `stage`, `prod`)? Which generator field controls the namespace?
 
 ---
 
-## 13. Exercise 9: Bootstrap a New App
+## 14. Exercise 10: Bootstrap a New App
 
 **Goal:** Use `create-new-app.sh` to scaffold a new application, then add it to both ApplicationSets.
 
@@ -514,15 +522,15 @@ EOF
 mkdir -p apps/my-new-service/environments/{dev,stage,prod}
 echo "# Values file for my-new-service in dev" > apps/my-new-service/environments/dev/values.yaml
 
-# Deploy via ArgoCD (the directory generator auto-detects new apps)
-oc get applications -n argocd appteam1-my-new-service
+# The git generator scans */environments/* and auto-detects new apps
+oc get applications -n argocd | grep my-new-service
 ```
 
-Since the `appteam1-apps` ApplicationSet uses a directory generator, the new `my-new-service/` directory is automatically detected. ArgoCD creates an Application for it without any changes to the ApplicationSet itself.
+Since the `appteam1-appset` ApplicationSet uses a git generator scanning `apps/*/environments/*`, the new directory is automatically detected once it has an `environments/` subdirectory. ArgoCD creates an Application for it without any changes to the ApplicationSet itself.
 
 ---
 
-## 14. What You Just Built
+## 15. What You Just Built
 
 ### Part 1: Manual Helm deployment
 
@@ -536,8 +544,9 @@ Since the `appteam1-apps` ApplicationSet uses a directory generator, the new `my
 
 | What | How | From tutorial |
 |------|-----|---------------|
-| `appteam1-apps` ApplicationSet | Git directory generator — auto-discovers apps | Tutorial 3 |
-| `todo-stack` ApplicationSet | List generator with sync-wave ordering (DB→API→UI) | Tutorial 3 |
+| `day2-services` ApplicationSet | Matrix generator (clusters × git dirs) — deploys the full service mesh via GitOps | Tutorial 3 |
+| `appteam1-appset` ApplicationSet | Git directory generator scanning `apps/*/environments/*` — auto-discovers apps and deploys per environment | Tutorial 3 |
+| `todo-stack` ApplicationSet | Matrix generator (components list × git dirs) with sync-wave ordering (DB→API→UI) — deploys all three in one namespace per environment | Tutorial 3 |
 | Path verification | Every Application points to a real directory with `Chart.yaml` + `values.yaml` | Tutorial 1 + 3 |
 | New app auto-detection | `create-new-app.sh` creates a directory; the ApplicationSet picks it up automatically | Tutorial 3 |
 

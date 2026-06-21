@@ -1,6 +1,6 @@
 argo-applications:
-  gitRepoUrl: https://github.example-org.com/gitops/day2-services.git
-  gitTargetRevision: multi-clusters
+  gitRepoUrl: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
+  gitTargetRevision: main
   argoProject: default
   namespace: argocd
   syncPolicy:
@@ -9,7 +9,7 @@ argo-applications:
     automated:
       prune: true
       selfHeal: true
-  appsDir: apps/service-mesh/dev/apps
+  appsDir: examples/infra/apps/service-mesh/clusters/ocp-dev1/apps
   apps:
     operators:
       namespace: openshift-operators

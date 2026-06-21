@@ -17,30 +17,27 @@ spec:
               repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
               revision: main
               directories:
-                - path: examples/infra/apps/*/{{.name}}
+                - path: examples/infra/apps/*/clusters/*
   template:
     metadata:
-      name: "day2-{{index .path.segments 1}}-{{.path.basenameNormalized}}"
+      name: "day2-{{ index .path.segments 3 }}-{{ .path.basenameNormalized }}"
     spec:
-      # The project the application belongs to.
       project: default
-      # Source of the application manifests
       source:
         repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
         targetRevision: main
-        path: "examples/infra/apps/{{index .path.segments 1}}/environments/{{index .path.segments 2}}"
+        path: "{{ .path.path }}"
         helm:
           valueFiles:
             - "values.yaml"
           ignoreMissingValueFiles: true
           parameters:
             - name: "global.clusterName"
-              value: "{{.path.basenameNormalized}}"
-          releaseName: "{{index .path.segments 1}}"
-      # Destination cluster and namespace to deploy the application
+              value: "{{ .path.basenameNormalized }}"
+          releaseName: "{{ index .path.segments 3 }}"
       destination:
-        server: "{{.server}}"
-        namespace: "{{index .path.segments 1}}"
+        server: "{{ .server }}"
+        namespace: "{{ index .path.segments 3 }}"
 
       # Sync policy
       syncPolicy:

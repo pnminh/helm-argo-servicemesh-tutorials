@@ -48,9 +48,11 @@ stringData:
 EOH
 ``` 
 ## Repository structure
-- `apps`: This folder contains Argo applications for deployment to Openshift. It also includes a sub-directory `environments` housing all target clusters for app deployment. Each app has a common `values.yaml` file used across all clusters, along with a cluster-specific `values.yaml` file in the respective directory.
-- `appssets`: Contains the ApplicationSet resource. A sample ApplicationSet is used to deploy multiple apps across multiple environments.
-- `scripts`: Utility scripts reside here. Use the [create-new-app.sh](./scripts/create-new-app.sh) script to initialize the structure for a new application.
+- `apps`: Contains Helm umbrella charts for each application (`todo-api`, `todo-db`, `todo-ui`). Each app has a common `values.yaml` and environment-specific overrides in `environments/`.
+- `appset`: Contains ArgoCD ApplicationSet resources:
+  - `appteam1-appset.yaml` — Git directory generator scanning `apps/*/environments/*`, deploys each app per environment with `environments/<env>/values.yaml` overrides
+  - `todo-stack-apps.yaml` — List generator with sync waves, deploys DB (wave 0) → API (wave 1) → UI (wave 2) in a single namespace
+- `scripts`: Utility scripts. Use [create-new-app.sh](./scripts/create-new-app.sh) to scaffold a new application.
 ```
 ./scripts/create-new-app.sh todo-example
 ```

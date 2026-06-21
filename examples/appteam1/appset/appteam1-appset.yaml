@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: appteam1-appset
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
+        revision: main
+        directories:
+          - path: examples/appteam1/apps/*/environments/*
+  template:
+    metadata:
+      name: "{{ index .path.segments 3 }}-{{ .path.basenameNormalized }}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/pnminh/helm-argo-servicemesh-tutorials.git
+        targetRevision: main
+        path: "examples/appteam1/apps/{{ index .path.segments 3 }}"
+        helm:
+          valueFiles:
+            - values.yaml
+            - "environments/{{ .path.basenameNormalized }}/values.yaml"
+          releaseName: "{{ index .path.segments 3 }}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .path.basenameNormalized }}"
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true
