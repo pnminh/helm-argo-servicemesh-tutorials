@@ -35,16 +35,16 @@ In a microservice world, every service needs TLS encryption, retry logic, metric
 │   deploy apps with a simple values.yaml.                     │
 │   mesh, security, observability come for free.               │
 ├──────────────────────────────────────────────────────────────┤
-│                  SERVICE MESH (Tutorial 2)                   │
-│                                                              │
-│   mTLS, tracing, metrics, auth — configured once by infra.   │
-│   app teams never touch it.                                  │
-├──────────────────────────────────────────────────────────────┤
 │                  GITOPS / ARGOCD (Tutorial 3)                │
 │                                                              │
 │   everything is driven by git.                               │
 │   ArgoCD ensures the cluster matches the repo.               │
 │   Works for infra services and application deployments.      │
+├──────────────────────────────────────────────────────────────┤
+│                  SERVICE MESH (Tutorial 2)                   │
+│                                                              │
+│   mTLS, tracing, metrics, auth — configured once by infra.   │
+│   app teams never touch it.                                  │
 ├──────────────────────────────────────────────────────────────┤
 │                  HELM CHARTS (Tutorial 1)                    │
 │                                                              │
