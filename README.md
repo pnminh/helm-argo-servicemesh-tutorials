@@ -18,7 +18,7 @@ Without shared standards, each team writes their own Deployment YAML from scratc
 
 Traditional CI/CD pushes changes to a cluster (`kubectl apply` from a pipeline). But Kubernetes is *declarative* — it's designed to reconcile towards a desired state, not receive push commands. **GitOps** flips the model: you declare the desired state in git, and a controller inside the cluster continuously enforces it. Rollbacks become `git revert`. Disaster recovery becomes "point at a new cluster." The pipeline only updates git — the cluster pulls what it needs.
 
-→ **Tutorial 3** walks through setting up ArgoCD to manage your entire service mesh with GitOps.
+→ **Tutorial 3** walks through setting up ArgoCD to manage *everything* via GitOps — infrastructure services and application deployments alike.
 
 ### Problem 3: Networking, Security, and Observability Are Everyone's Problem — and Nobody's
 
@@ -40,10 +40,11 @@ In a microservice world, every service needs TLS encryption, retry logic, metric
 │   mTLS, tracing, metrics, auth — configured once by infra.   │
 │   app teams never touch it.                                  │
 ├──────────────────────────────────────────────────────────────┤
-│                  GITOPS (Tutorial 3)                          │
+│                  GITOPS / ARGOCD (Tutorial 3)                  │
 │                                                              │
 │   everything is driven by git.                                │
 │   ArgoCD ensures the cluster matches the repo.               │
+│   Works for infra services and application deployments.      │
 ├──────────────────────────────────────────────────────────────┤
 │                  HELM CHARTS (Tutorial 1)                     │
 │                                                              │
@@ -101,11 +102,11 @@ Start with *why* a service mesh exists — the networking problems microservices
 
 ---
 
-### [Tutorial 3: ArgoCD ApplicationSet for Infra Team Service Mesh](tutorial-3-argocd-appset-service-mesh.md)
+### [Tutorial 3: ArgoCD and GitOps — Automated Deployments for Infra and App Teams](tutorial-3-argocd-appset-service-mesh.md)
 
-**Level:** Advanced · **Role:** Infra team
+**Level:** Advanced · **Role:** Both teams
 
-Learn GitOps from first principles — the push vs pull deployment models, why ArgoCD fits Kubernetes, and how an ApplicationSet with a matrix generator deploys your entire service mesh to multiple clusters. Master sync waves for ordered deployments (operators before SMCP, SMCP before gateways) and understand what sync waves *don't* guarantee.
+Learn GitOps from first principles — the push vs pull deployment models, why ArgoCD fits Kubernetes, and how an ApplicationSet with a matrix generator deploys components to multiple clusters. The patterns work the same whether you're deploying infrastructure services (operators, mesh) or application stacks (database → API → frontend). Master sync waves for ordered deployments and understand what they *don't* guarantee.
 
 **Prerequisites:** Tutorials 1 & 2, ArgoCD + ApplicationSet controller installed
 
