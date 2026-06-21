@@ -14,17 +14,18 @@ Without shared standards, each team writes their own Deployment YAML from scratc
 
 → **Tutorial 1** teaches this pattern end-to-end.
 
-### Problem 2: CI/CD Pipelines Don't Fit Kubernetes
+### Problem 2: Networking, Security, and Observability Are Everyone's Problem — and Nobody's
+
+In a microservice world, every service needs TLS encryption, retry logic, metrics, and tracing. If each app team implements these themselves, you get a patchwork: some services encrypt traffic, some don't. Some export Prometheus metrics, some don't. Debugging a slow request means grepping logs across 4 different services. **A service mesh** moves these concerns out of application code and into a shared infrastructure layer. App teams focus on business logic. The mesh handles mTLS, retries, tracing, and authorization transparently.
+
+→ **Tutorial 2** installs the mesh.  **Tutorial 4** shows how app teams plug their apps into it — with a single `serviceMesh.enabled: true` toggle.
+
+### Problem 3: CI/CD Pipelines Don't Fit Kubernetes
 
 Traditional CI/CD pushes changes to a cluster (`kubectl apply` from a pipeline). But Kubernetes is *declarative* — it's designed to reconcile towards a desired state, not receive push commands. **GitOps** flips the model: you declare the desired state in git, and a controller inside the cluster continuously enforces it. Rollbacks become `git revert`. Disaster recovery becomes "point at a new cluster." The pipeline only updates git — the cluster pulls what it needs.
 
 → **Tutorial 3** walks through setting up ArgoCD to manage *everything* via GitOps — infrastructure services and application deployments alike.
 
-### Problem 3: Networking, Security, and Observability Are Everyone's Problem — and Nobody's
-
-In a microservice world, every service needs TLS encryption, retry logic, metrics, and tracing. If each app team implements these themselves, you get a patchwork: some services encrypt traffic, some don't. Some export Prometheus metrics, some don't. Debugging a slow request means grepping logs across 4 different services. **A service mesh** moves these concerns out of application code and into a shared infrastructure layer. App teams focus on business logic. The mesh handles mTLS, retries, tracing, and authorization transparently.
-
-→ **Tutorial 2** installs the mesh. **Tutorial 4** shows how app teams plug into it — with a single `serviceMesh.enabled: true` toggle.
 
 ### The Big Picture
 
