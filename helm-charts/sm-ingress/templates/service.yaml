@@ -1,0 +1,22 @@
+{{- $root := . -}}
+{{- range  $ingressName, $ingressValues := .Values.ingresses  }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $ingressName }}
+  labels:
+    istio: {{ $ingressName }}
+    app: {{ $ingressName }}
+    {{- include "library-chart.labels" $root | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    istio: {{ $ingressName }}
+  ports:
+  {{- range $ingressValues.service.ports }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort }}
+  {{- end }}
+{{- end }}

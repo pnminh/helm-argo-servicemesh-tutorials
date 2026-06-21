@@ -1,0 +1,3 @@
+kiali:
+  name: kiali-user-workload-monitoring
+  k8sRoleName: cluster-monitoring-view

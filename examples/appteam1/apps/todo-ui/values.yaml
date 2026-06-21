@@ -1,0 +1,12 @@
+# Values file for todo-ui chart
+app-deployment:
+  image:
+    registry: quay.io/example-org
+    path: todo-ui
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "main-5ae3100"
+  imagePullSecrets:
+    - name: quay
+  blueGreen:
+    enabled: true

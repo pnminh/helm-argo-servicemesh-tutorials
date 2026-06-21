@@ -1,0 +1,36 @@
+app-servicemesh:
+  enabled: true
+sm-ingress:
+  ingresses:
+   bookinfo-ingress:
+      service:
+        ports:
+          - name: http2
+            port: 8080
+            targetPort: 8080
+      routes:
+        default:
+          host: "bookinfo.apps.dev.k8s.example-org.com"
+          wildcardPolicy: None
+          tls:
+            termination: edge
+          targetPort: http2
+      gateway:
+        name: bookinfo-gateway
+        servers:
+          - port:
+              number: 8080
+              name: "http2"
+              protocol: "HTTP"
+            hosts:
+              - "*"
+        authorization:
+          enabled: true
+          action: custom
+          provider: 
+            name: example-org-ext-authz-http
+          rules:
+            - to:
+                - operation:
+                    notMethods:
+                      - OPTIONS

@@ -1,0 +1,9 @@
+enabled: true
+services: {}
+# services:
+#   - name: apirouter
+#     routeHost: apirouter.mesh.apps.dev.k8s.example-org.com 
+#     host: apirouter.apps-dev.example-org.com # or service-api.service-namespace if isExternal=false, using release name if not set
+#     port: 443
+#     isExternal: true # Set to true for external services
+#     protocol: https # default to http, also support https,tls

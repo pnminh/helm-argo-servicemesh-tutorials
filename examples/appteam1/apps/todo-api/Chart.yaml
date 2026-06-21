@@ -1,0 +1,12 @@
+apiVersion: v2
+name: todo-api
+description: A Helm chart for todo-api
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-deployment
+    version: ">=0.1.0"
+    repository: "file://../../../../helm-charts/app-deployment"
+  - name: library-chart
+    version: ">=0.1.0"
+    repository: "file://../../../../helm-charts/library-chart"

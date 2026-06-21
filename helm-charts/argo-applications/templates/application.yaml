@@ -1,0 +1,34 @@
+{{- $root := . -}}
+{{- range $appName, $appValues := .Values.apps }}
+{{- if $appValues.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{$root.Release.Name}}-{{ $appName }}-{{ tpl $root.Values.clusterName $root  }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "{{  $appValues.syncWave }}"
+  labels:
+    {{- include "library-chart.labels" $root | nindent 4 }}
+  namespace: {{$root.Values.namespace | default "argocd"}}
+spec:
+  project: {{  $root.Values.argoProject }}
+  source:
+    repoURL: {{ $root.Values.gitRepoUrl }}
+    targetRevision: {{ $root.Values.gitTargetRevision }}
+    path: {{ $root.Values.appsDir }}/{{ $appName }}
+    helm:
+      valueFiles:
+        - values.yaml
+      releaseName:  "{{ $appName }}"
+  destination:
+    name: {{ tpl $root.Values.clusterName $root  }}
+    namespace: {{  $appValues.namespace }}
+  syncPolicy:
+    {{- toYaml $root.Values.syncPolicy | nindent 4 }}
+  {{- if $appValues.ignoreDifferences }}
+  ignoreDifferences:
+    {{- toYaml $appValues.ignoreDifferences | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

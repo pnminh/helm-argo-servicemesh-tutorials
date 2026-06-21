@@ -1,0 +1,21 @@
+{{- range  $configName, $configValue := .Values.namespace  }}
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: NamespaceConfig
+metadata:
+  name: {{ $configName }}
+spec:
+  labelSelector:
+  {{- with $configValue.labelSelector }}
+      {{- toYaml . | nindent 4 }}
+  {{- end }}
+  annotationSelector:
+  {{- with $configValue.annotationSelector }}
+      {{- toYaml . | nindent 4 }}
+  {{- end }}
+  templates:
+{{- range $configValue.templates }}
+    - objectTemplate: |
+{{ . | indent 8 }}
+{{- end }}
+{{- end }}

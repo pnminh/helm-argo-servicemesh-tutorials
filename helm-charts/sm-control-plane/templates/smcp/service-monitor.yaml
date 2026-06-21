@@ -1,0 +1,29 @@
+# This ServiceMonitor configuration tells Prometheus to scrape metrics from the 
+# Istio control plane component istiod running in the istio-system namespace. 
+# It targets services labeled with istio: pilot, scrapes the http-monitoring port every 30 seconds, 
+# and includes relabeling to set the mesh_id label to "basic-istio-system".
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: istiod-monitor
+  labels:
+    {{- include "library-chart.labels" . | nindent 4 }}
+spec:
+  # targetLabels:
+  # - app
+  # - version
+  # - environment
+  # can result in metric name: istio_requests_total{app="istiod", version="v1", environment="production", ...}
+  # and query: by app: istio_requests_total{app="istiod"}, by version: istio_requests_total{version="v1"}
+  targetLabels: #which labels from the target (app: istiod) should be copied to the metrics being collected. 
+  - app
+  selector:
+    matchLabels:
+      istio: pilot
+  endpoints:
+  - port: http-monitoring
+    interval: 30s
+    relabelings:
+    - action: replace
+      replacement: "basic-istio-system" 
+      targetLabel: mesh_id

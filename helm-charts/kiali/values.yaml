@@ -1,0 +1,40 @@
+
+name: kiali-user-workload-monitoring
+serviceAccount: kiali-service-account
+k8sRoleName: cluster-monitoring-view
+version: v1.73 #required for OSSM's CRDs' versions, as latest use Istio's CRDs' ones
+externalServices:
+  grafana:
+    enabled: false
+  prometheus:
+    auth:
+      type: bearer
+      useKialiToken: true
+    queryScope: 
+      meshId: basic-istio-system
+    thanosProxy:
+      enabled: true
+    url: https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+  tracing:
+    queryTimeout: 300
+    enabled: true
+    inClusterUrl: http://tempo-tempo-query-frontend.tracing-system.svc.cluster.local:16685
+    useGrpc: true
+  istio:
+    componentStatus:
+      enabled: true
+      components:
+        - appLabel: istiod
+          isCore: true
+        - appLabel: example-org-ingress
+          isCore: true
+          isProxy: true
+          namespace: istio-ingress
+    configMapName: istio-basic
+    envoyAdminLocalPort: 15000
+    ingressGatewayNamespace: istio-ingress
+    istioApiEnabled: true
+    istiodDeploymentName: istiod-basic
+    istioSidecarInjectorConfigMapName: istio-sidecar-injector-basic
+    istiodPodMonitoringPort: 15014
+    urlServiceVersion: http://istiod-basic.istio-system:15014/version

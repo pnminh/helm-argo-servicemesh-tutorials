@@ -1,0 +1,14 @@
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: {{ .Values.telemetry.name }}
+  labels:
+    {{- include "library-chart.labels" . | nindent 4 }}
+spec:
+  metrics:
+    - providers:
+        {{ toYaml .Values.telemetry.metrics.providers  | nindent 8  }}
+  tracing:
+    - providers:
+        {{ toYaml .Values.telemetry.tracing.providers  | nindent 8  }}
+      randomSamplingPercentage: {{ .Values.telemetry.tracing.randomSamplingPercentage }}

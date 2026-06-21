@@ -1,0 +1,10 @@
+kind: ServiceMeshMemberRoll
+apiVersion: maistra.io/v1
+metadata:
+  name: {{ .Values.serviceMeshMemberRoll.name }}
+  labels:
+    {{- include "library-chart.labels" . | nindent 4 }}
+spec:
+  memberSelectors:
+  - matchLabels:
+      {{ toYaml .Values.serviceMeshMemberRoll.memberSelectors.matchLabels  | nindent 6  }}

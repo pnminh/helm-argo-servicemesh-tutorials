@@ -1,0 +1,3 @@
+{{- if .Values.configmaps -}}
+{{ include "library-chart.createConfigmaps" . }}
+{{- end }}

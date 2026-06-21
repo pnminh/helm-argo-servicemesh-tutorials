@@ -1,0 +1,4 @@
+# Values file for todo-db in stage environment
+image:
+  tag: |-
+    b555008

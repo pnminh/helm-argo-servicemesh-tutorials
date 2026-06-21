@@ -1,0 +1,96 @@
+# ingresses:
+#   # example-org ingress specific values
+#   example-org-ingress:
+#     service:
+#       ports:
+#         - name: http2
+#           port: 80
+#           targetPort: 8080
+#         - name: https
+#           port: 443
+#           targetPort: 8443
+#     deployment:
+#       sidecarInject: "true"
+#       containerPorts:
+#         - name: http2
+#           containerPort: 8080
+#         - name: https
+#           containerPort: 8443
+#     routes:
+#       default:
+#         host: "example-org-ingress.mesh.apps.dev.k8s.example-org.com"
+#         wildcardPolicy: Subdomain
+#         tls:
+#            termination: passthrough
+#         targetPort: https
+#       apps-dev:
+#         host: "example-org-ingress2.mesh.apps.dev.k8s.example-org.com"
+#         wildcardPolicy: Subdomain
+#         tls:
+#            termination: passthrough
+#         targetPort: https
+#     gateway:
+#         tlsSecrets:
+#           - name: example-org-ingress-tls
+#             configs:
+#               externalSecretStoreRef:
+#                 #kind: ClusterSecretStore #optional
+#                 #name: ocp-secrets-store
+#                 tlsCertRemoteKey:  example-org-ingress-tls-cert #optional default [certName]-cert
+#                 tlsKeyRemoteKey:  example-org-ingress-tls-key #optional default [certName]-key
+#     servers:
+#         - port:
+#             number: 8443
+#             name: "https"
+#             protocol: "HTTPS"
+#           hosts:
+#             - "*"
+#           tls:
+#             credentialName:  example-org-ingress-tls #TODO: create external-secret
+#             mode: SIMPLE
+#     authorization:
+#         enabled: true
+#         action: custom
+#         providers:
+#           name: example-org-ext-authz-http
+#         rules:
+#           - to:
+#               - operation:
+#                   notHosts:
+#                     - example-org-ingress.istio-ingress.svc.cluster.local
+#                   notMethods:
+#                     - OPTIONS
+
+#   # tempo ingress specific values
+#   tempo-ingress:
+#     gateway: tempo-ingress
+#     service:
+#       ports:
+#         - name: http2
+#           port: 80
+#           targetPort: 8080
+#         - name: https
+#           port: 443
+#           targetPort: 8443
+#     deployment:
+#       sidecarInject: "true"
+#       containerPorts:
+#         - name: http2
+#           containerPort: 8080
+#         - name: https
+#           containerPort: 8443
+#     routes:
+#       # host: tempo.example.com
+#       default:
+#         wildcardPolicy: None
+#         tls:
+#            termination: edge
+#         targetPort: http2
+#     gateway:
+#       servers:
+#         - port:
+#             number: 8080
+#             name: "http"
+#             protocol: "HTTP"
+#           hosts:
+#             - "*"

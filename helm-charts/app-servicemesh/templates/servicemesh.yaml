@@ -1,0 +1,6 @@
+
+{{- if .Values.enabled -}}
+{{ include "library-chart.enableServiceMesh" (dict "root" . "serviceMesh" .Values) }}
+{{- else -}}
+{{ include "library-chart.disableServiceMesh" (dict "root" .) }}
+{{- end }}

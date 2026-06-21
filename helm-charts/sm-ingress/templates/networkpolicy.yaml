@@ -1,0 +1,20 @@
+{{- $root := . -}}
+{{- range  $ingressName, $ingressValues := .Values.ingresses  }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $ingressName }}
+  labels:
+    istio: {{ $ingressName }}
+    app: {{ $ingressName }}
+    {{- include "library-chart.labels" $root | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      istio: {{ $ingressName }}
+  ingress:
+    - {}
+  policyTypes:
+    - Ingress
+{{- end }}

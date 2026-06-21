@@ -1,0 +1,37 @@
+{{- if .Values.route.enabled -}}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  host: {{ .Values.route.host | default "" }}
+  to:
+    kind: Service
+    name: {{ .Release.Name }}
+    weight: 100
+  port:
+    targetPort: {{ .Values.route.targetPort }}
+  tls:
+    termination: edge
+  wildcardPolicy: None
+{{- end }}
+{{- if .Values.blueGreen.enabled }}
+  {{- if .Values.blueGreen.previewRoute.enabled }}
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ .Release.Name }}-preview
+spec:
+  host: {{ .Values.blueGreen.previewRoute.host | default "" }}
+  to:
+    kind: Service
+    name: {{ .Release.Name }}-preview
+    weight: 100
+  port:
+    targetPort: {{ .Values.route.targetPort }}
+  tls:
+    termination: edge
+  wildcardPolicy: None
+  {{- end }}
+{{- end }}

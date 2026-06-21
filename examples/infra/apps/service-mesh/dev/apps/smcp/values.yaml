@@ -1,0 +1,9 @@
+app-servicemesh:
+  enabled: true
+sm-control-plane:
+  serviceMeshControlPlane:
+    name: basic
+  serviceMeshMemberRoll:
+    name: default
+  telemetry:
+    name: mesh-default

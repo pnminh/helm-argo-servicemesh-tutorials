@@ -1,0 +1,28 @@
+{{- $root := . -}}
+{{- range  $ingressName, $ingressValues := .Values.ingresses  }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $ingressName }}
+  labels:
+    {{- include "library-chart.labels" $root | nindent 4 }}
+    istio: {{ $ingressName }}
+    app: {{ $ingressName }}
+spec:
+  selector:
+    matchLabels:
+      istio: {{ $ingressName }}
+  template:
+    metadata:
+      labels:
+        istio: {{ $ingressName }}
+        app: {{ $ingressName }}
+        sidecar.istio.io/inject: "true"
+      annotations:
+        inject.istio.io/templates: gateway
+    spec:
+      containers:
+        - name: istio-proxy
+          image: auto
+{{- end }}

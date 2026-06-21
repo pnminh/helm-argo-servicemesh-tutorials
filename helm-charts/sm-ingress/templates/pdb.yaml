@@ -1,0 +1,17 @@
+{{- $root := . -}}
+{{- range  $ingressName, $ingressValues := .Values.ingresses  }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    istio: {{ $ingressName }}
+    app: {{ $ingressName }}
+    {{- include "library-chart.labels" $root | nindent 4 }}
+  name: {{ $ingressName }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      istio: {{ $ingressName }}
+{{- end }}

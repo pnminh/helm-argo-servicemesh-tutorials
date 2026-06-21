@@ -1,0 +1,70 @@
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-route-config-hook
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-route-config-hook
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+rules:
+- apiGroups: ["operator.openshift.io"]
+  resources: ["ingresscontrollers"]
+  verbs: ["get","list","patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-route-config-hook
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-route-config-hook
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}-route-config-hook
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-route-config-hook
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Release.Name }}-route-config-hook
+      containers:
+        - name: update-route-config
+          image: quay.io/openshift/origin-cli  # Use an image that contains kubectl
+          command:
+            - /bin/sh
+            - -c
+            - |- 
+              # enable wildcard route
+              oc patch ingresscontroller default -n openshift-ingress-operator --type='merge' -p '{
+                "spec": {
+                  "routeAdmission": {
+                    "namespaceOwnership": "InterNamespaceAllowed",
+                    "wildcardPolicy": "WildcardsAllowed"
+                  }
+                }
+              }'    
+      restartPolicy: Never
+  backoffLimit: 4

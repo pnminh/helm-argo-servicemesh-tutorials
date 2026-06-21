@@ -1,0 +1,31 @@
+kind: ServiceMeshControlPlane
+apiVersion: maistra.io/v2
+metadata:
+  name: {{ .Values.serviceMeshControlPlane.name }}
+  labels:
+    {{- include "library-chart.labels" . | nindent 4 }}
+spec:
+  addons:
+    grafana:
+      enabled: {{ .Values.serviceMeshControlPlane.addons.grafana.enabled }}
+    kiali:
+      name: {{ .Values.serviceMeshControlPlane.addons.kiali.name }}
+    prometheus:
+      enabled: {{ .Values.serviceMeshControlPlane.addons.prometheus.enabled }}
+  meshConfig:
+    extensionProviders:
+      {{- toYaml .Values.serviceMeshControlPlane.meshConfig.extensionProviders | nindent 6 }}
+  gateways:
+    ingress:
+      enabled: {{ .Values.serviceMeshControlPlane.gateways.ingress.enabled }}
+    egress:
+      enabled: {{ .Values.serviceMeshControlPlane.gateways.egress.enabled }}
+  policy:
+    type: {{ .Values.serviceMeshControlPlane.policy.type }}
+  telemetry:
+    type: {{ .Values.serviceMeshControlPlane.telemetry.type }}
+  tracing:
+    sampling: {{ .Values.serviceMeshControlPlane.tracing.sampling }}
+    type: {{ .Values.serviceMeshControlPlane.tracing.type }}
+  version: {{ .Values.serviceMeshControlPlane.version }}
+  mode: {{ .Values.serviceMeshControlPlane.mode }}

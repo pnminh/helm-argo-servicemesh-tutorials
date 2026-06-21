@@ -1,0 +1,27 @@
+
+#gitRepoUrl: https://github.example-org.com/your-repo/your-charts.git
+gitTargetRevision: main
+argoProject: default
+clusterName: "{{ .Values.global.clusterName }}"
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+#appsDir: apps/service-mesh/charts
+# apps:
+#   operators:
+#     namespace: service-mesh
+#     enabled: true
+#     syncWave: 0
+#   istio-system:
+#     namespace: istio-system
+#     enabled: true
+#     syncWave: 1
+#   istio-ingress: 
+#     namespace: istio-ingress
+#     enabled: true
+#     syncWave: 2
+#   tracing-system: 
+#     namespace: tracing-system
+#     enabled: true
+#     syncWave: 3

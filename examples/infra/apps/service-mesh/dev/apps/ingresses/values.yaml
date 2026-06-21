@@ -1,0 +1,99 @@
+app-servicemesh:
+  enabled: true
+sm-ingress:
+  ingresses:
+    api:
+      service:
+        ports:
+          - name: http2
+            port: 8080
+            targetPort: 8080
+          - name: https
+            port: 8443
+            targetPort: 8443
+      routes:
+        default:
+          host: "api.mesh.apps.dev.k8s.example-org.com"
+          wildcardPolicy: Subdomain
+          tls:
+            termination: passthrough
+          targetPort: https
+        apps-dev:
+          host: "api.apps-dev.example-org.com"
+          wildcardPolicy: Subdomain
+          tls:
+            termination: passthrough
+          targetPort: https
+      gateway:
+        name: example-org-gateway
+        tlsSecrets:
+          - name: example-org-gateway-default-tls
+            configs:
+              externalSecretStoreRef:
+                #kind: ClusterSecretStore #optional
+                name: example-org-store
+                #tlsCertRemoteKey:  example-org-ingress-tls-cert #optional default [certName]-cert
+                #tlsKeyRemoteKey:  example-org-ingress-tls-key #optional default [certName]-key
+          - name: example-org-gateway-apps-dev-tls
+            configs:
+              externalSecretStoreRef:
+                #kind: ClusterSecretStore #optional
+                name: example-org-store
+                #tlsCertRemoteKey:  example-org-ingress-tls-cert #optional default [certName]-cert
+                #tlsKeyRemoteKey:  example-org-ingress-tls-key #optional default [certName]-key
+        servers:
+          - hosts:
+              - "*.apps-dev.example-org.com"
+            port:
+              name: https2
+              number: 8443
+              protocol: HTTPS
+            tls:
+              credentialName: example-org-gateway-apps-dev-tls
+              mode: SIMPLE
+          - hosts:
+              - "*.k8s.example-org.com"
+            port:
+              name: https
+              number: 8443
+              protocol: HTTPS
+            tls:
+              credentialName: example-org-gateway-default-tls
+              mode: SIMPLE
+        authorization:
+          enabled: true
+          action: custom
+          provider:
+            name: example-org-ext-authz-http
+          rules:
+            - to:
+                - operation:
+                    notHosts:
+                      - api.mesh.svc.cluster.local
+                    notMethods:
+                      - OPTIONS
+    tempo-ingress:
+      service:
+        ports:
+          - name: http2
+            port: 8080
+            targetPort: 8080
+          - name: https
+            port: 8443
+            targetPort: 8443
+      routes:
+        default:
+          host: "tempo.apps.dev.k8s.example-org.com"
+          wildcardPolicy: None
+          tls:
+            termination: edge
+          targetPort: http2
+      gateway:
+        name: tempo-gateway
+        servers:
+          - port:
+              number: 8080
+              name: "http2"
+              protocol: "HTTP"
+            hosts:
+              - "*"

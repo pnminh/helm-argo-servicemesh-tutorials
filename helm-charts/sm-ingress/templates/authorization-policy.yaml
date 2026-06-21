@@ -1,0 +1,23 @@
+{{- $root := . -}}
+{{- range  $ingressName, $ingressValues := .Values.ingresses  }}
+{{- if ($ingressValues.gateway.authorization).enabled }}
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ $ingressValues.gateway.name }}-authz
+  labels:
+    istio: {{ $ingressName }}
+    app: {{ $ingressName }}
+    {{- include "library-chart.labels" $root | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ $ingressName }}
+  action: {{ $ingressValues.gateway.authorization.action | upper | quote }}
+  provider:
+  {{- toYaml $ingressValues.gateway.authorization.provider | nindent 4 }}
+  rules:
+  {{- toYaml $ingressValues.gateway.authorization.rules | nindent 4 }}
+{{- end }}
+{{- end }}

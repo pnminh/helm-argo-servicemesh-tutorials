@@ -1,0 +1,1 @@
+1. Building app image using OCP BuildConfig

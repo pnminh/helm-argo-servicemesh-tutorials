@@ -1,0 +1,3 @@
+{{- if or .Values.namespaceLabels .Values.namespaceAnnotations .Values.namespaceLabelsToRemove .Values.namespaceAnnotationsToRemove  -}}
+{{ include "library-chart.labelAndAnnotateNamespace" . }}
+{{- end }}

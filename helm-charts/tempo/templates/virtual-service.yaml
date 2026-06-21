@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ .Values.virtualService.name | default "tempo-query-frontend" }}
+  labels:
+    {{- include "library-chart.labels" . | nindent 4 }}
+spec:
+  hosts:
+  {{- range .Values.virtualService.hosts }}
+  - {{ . | quote }}
+  {{- end }}
+  gateways:
+  {{- range .Values.virtualService.gateways }}
+  - {{ . | quote }}
+  {{- end }}
+  http:
+    {{- toYaml .Values.virtualService.http | nindent 4 }}

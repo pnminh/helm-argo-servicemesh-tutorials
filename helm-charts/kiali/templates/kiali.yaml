@@ -1,0 +1,47 @@
+apiVersion: kiali.io/v1alpha1
+kind: Kiali
+metadata:
+  name: {{ .Values.name | default "kiali-user-workload-monitoring" }}
+  labels:
+    {{- include "library-chart.labels" . | nindent 4 }}
+spec:
+  version: {{ .Values.version }}
+  external_services:
+    grafana:
+      enabled: {{ .Values.externalServices.grafana.enabled | default false }}
+    prometheus:
+      auth:
+        type: {{ .Values.externalServices.prometheus.auth.type | default "bearer" }}
+        use_kiali_token: {{ .Values.externalServices.prometheus.auth.useKialiToken | default true }}
+      query_scope:
+        mesh_id: {{ .Values.externalServices.prometheus.queryScope.meshId | quote | default "basic-istio-system" }}
+      thanos_proxy:
+        enabled: {{ .Values.externalServices.prometheus.thanosProxy.enabled | default true }}
+      url: {{ .Values.externalServices.prometheus.url | default "https://thanos-querier.openshift-monitoring.svc.cluster.local:9091" | quote }}
+    tracing:
+      query_timeout: {{ .Values.externalServices.tracing.queryTimeout | default 300 }}
+      enabled: {{ .Values.externalServices.tracing.enabled | default true }}
+      in_cluster_url: {{ .Values.externalServices.tracing.inClusterUrl | default "http://tempo-tempo-query-frontend.tracing-system.svc.cluster.local:16685" | quote }}
+      use_grpc: {{ .Values.externalServices.tracing.useGrpc | default true }}
+    istio:
+      component_status:
+        enabled: {{ .Values.externalServices.istio.componentStatus.enabled | default true }}
+        components:
+          {{- range .Values.externalServices.istio.componentStatus.components }}
+          - app_label: {{ .appLabel | default "istiod" }}
+            is_core: {{ .isCore | default true }}
+            {{- if .isProxy }}
+            is_proxy: {{ .isProxy | default false }}
+            {{- end }}
+            {{- if .namespace }}
+            namespace: {{ .namespace | default "istio-ingress" }}
+            {{- end }}
+          {{- end }}
+      config_map_name: {{ .Values.externalServices.istio.configMapName | default "istio-basic" | quote }}
+      envoy_admin_local_port: {{ .Values.externalServices.istio.envoyAdminLocalPort | default 15000 }}
+      ingress_gateway_namespace: {{ .Values.externalServices.istio.ingressGatewayNamespace | default "istio-ingress" | quote }}
+      istio_api_enabled: {{ .Values.externalServices.istio.istioApiEnabled | default true }}
+      istiod_deployment_name: {{ .Values.externalServices.istio.istiodDeploymentName | default "istiod-basic" | quote }}
+      istio_sidecar_injector_config_map_name: {{ .Values.externalServices.istio.istioSidecarInjectorConfigMapName | default "istio-sidecar-injector-basic" | quote }}
+      istiod_pod_monitoring_port: {{ .Values.externalServices.istio.istiodPodMonitoringPort | default 15014 }}
+      url_service_version: {{ .Values.externalServices.istio.urlServiceVersion | default "http://istiod-basic.istio-system:15014/version" | quote }}

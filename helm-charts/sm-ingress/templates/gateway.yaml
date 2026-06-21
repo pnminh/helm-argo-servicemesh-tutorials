@@ -1,0 +1,17 @@
+{{- $root := . -}}
+{{- range  $ingressName, $ingressValues := .Values.ingresses  }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ $ingressValues.gateway.name }}
+  labels:
+    istio: {{ $ingressName }}
+    app: {{ $ingressName }}
+    {{- include "library-chart.labels" $root | nindent 4 }}
+spec:
+  selector:
+    istio: {{ $ingressName }}
+  servers:
+    {{- toYaml $ingressValues.gateway.servers | nindent 4 }}
+{{- end }}

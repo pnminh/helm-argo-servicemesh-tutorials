@@ -1,0 +1,82 @@
+apiVersion: tempo.grafana.com/v1alpha1
+kind: TempoStack
+metadata:
+  name: tempo
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+  labels:
+    {{- include "library-chart.labels" . | nindent 4 }}
+spec:
+  storage:
+    secret:
+      name: {{ .Values.storage.secret.name }}
+      type: {{ .Values.storage.secret.type }} # Added storage type here
+  storageClassName: {{ .Values.storageClassName | default "" }}
+
+  template:
+    gateway:
+      enabled: {{ .Values.gateway.enabled }}
+      {{- if .Values.gateway.enabled }}
+      component:
+        replicas: {{ .Values.gateway.replicas }}
+        resources:
+          limits:
+            memory: {{ .Values.gateway.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.gateway.resources.requests.cpu }}
+            memory: {{ .Values.gateway.resources.requests.memory }}
+      {{- end }}
+    queryFrontend:
+      jaegerQuery:
+        enabled: true
+      component:
+        replicas: {{ .Values.queryFrontend.replicas }}
+        resources:
+          limits:
+            memory: {{ .Values.queryFrontend.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.queryFrontend.resources.requests.cpu }}
+            memory: {{ .Values.queryFrontend.resources.requests.memory }}
+    distributor:
+      component:
+        resources:
+          limits:
+            memory: {{ .Values.distributor.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.distributor.resources.requests.cpu }}
+            memory: {{ .Values.distributor.resources.requests.memory }}
+        replicas: {{ .Values.distributor.replicas }}
+    compactor:
+      replicas: {{ .Values.compactor.replicas }}
+      resources:
+        limits:
+          memory: {{ .Values.compactor.resources.limits.memory }}
+        requests:
+          cpu: {{ .Values.compactor.resources.requests.cpu }}
+          memory: {{ .Values.compactor.resources.requests.memory }}
+    ingester:
+      replicas: {{ .Values.ingester.replicas }}
+      resources:
+        limits:
+          memory: {{ .Values.ingester.resources.limits.memory }}
+        requests:
+          cpu: {{ .Values.ingester.resources.requests.cpu }}
+          memory: {{ .Values.ingester.resources.requests.memory }}
+    querier:
+      replicas: {{ .Values.querier.replicas }}
+      resources:
+        limits:
+          memory: {{ .Values.querier.resources.limits.memory }}
+        requests:
+          cpu: {{ .Values.querier.resources.requests.cpu }}
+          memory: {{ .Values.querier.resources.requests.memory }}
+
+  retention:
+    global:
+      traces: {{ .Values.retention.global.traces }}
+
+  resources:
+    total:
+      limits:
+        memory: {{ .Values.resources.total.limits.memory }}
+        cpu: {{ .Values.resources.total.limits.cpu }}

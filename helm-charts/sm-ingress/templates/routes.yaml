@@ -1,0 +1,34 @@
+{{- $root := . -}}
+{{- range  $ingressName, $ingressValues := .Values.ingresses  }}
+{{- if $ingressValues.routes }}
+{{- range  $routeName, $routeValue := $ingressValues.routes  }}
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  {{- if eq $routeName "default" }}
+  name: {{ $ingressName }}
+  {{- else }}
+  name: {{ $ingressName }}-{{ $routeName }}
+  {{- end }}
+  labels:
+    istio: {{ $ingressName }}
+    app: {{ $ingressName }}
+    {{- include "library-chart.labels" $root | nindent 4 }}
+spec:
+  {{- if $routeValue.host }}
+  host: "{{ $routeValue.host }}"
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ $ingressName }}
+    weight: 100
+  port:
+    targetPort: {{ $routeValue.targetPort }}
+  tls:
+    termination: {{ $routeValue.tls.termination }}
+    insecureEdgeTerminationPolicy:  {{ $routeValue.tls.insecureEdgeTerminationPolicy | default "Redirect" }}
+  wildcardPolicy: {{ $routeValue.wildcardPolicy }}
+{{- end }}
+{{- end }}
+{{- end }}

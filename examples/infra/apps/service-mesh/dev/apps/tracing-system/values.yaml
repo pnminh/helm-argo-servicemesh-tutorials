@@ -1,0 +1,21 @@
+app-servicemesh:
+  enabled: true
+tempo:
+  storage:
+    secret:
+      name: tempo-azure-secret
+      type: azure
+      configs:
+        externalSecretStoreRef:
+          kind: ClusterSecretStore
+          name: example-org-store
+        data:
+          - remoteKey: tempo-store-account-key
+            secretKey: account_key
+          - remoteKey: tempo-store-account-name
+            secretKey: account_name
+          - remoteKey: tempo-store-container
+            secretKey: container
+  virtualService:
+    gateways:
+      - "mesh/tempo-gateway"

@@ -1,0 +1,3 @@
+{{- if .Values.pvcs -}}
+{{ include "library-chart.createPvcs" . }}
+{{- end }}

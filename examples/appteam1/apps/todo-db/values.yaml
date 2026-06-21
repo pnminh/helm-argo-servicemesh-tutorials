@@ -1,0 +1,40 @@
+# Values file for todo-db chart
+app-deployment:
+  image:
+    registry: quay.io/example-org
+    path: postgres-nonroot
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.0.0"
+  imagePullSecrets:
+    - name: quay
+  env:
+    - name: POSTGRES_DB
+      value: todo-db
+    - name: POSTGRES_USER
+      value: admin
+    - name: POSTGRES_PASSWORD
+      value: admin
+    - name: PGDATA
+      value: /temp/data
+  livenessProbe:
+    tcpSocket:
+      port: 5432
+    initialDelaySeconds: 30
+  readinessProbe:
+    tcpSocket:
+      port: 5432
+    initialDelaySeconds: 30
+  ports:
+    - name: db
+      containerPort: 5432
+      protocol: TCP
+  service:
+    type: ClusterIP
+    ports:
+      - name: db
+        protocol: TCP
+        port: 5432
+        targetPort: db
+  route:
+    enabled: false

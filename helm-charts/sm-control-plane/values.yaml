@@ -1,0 +1,63 @@
+serviceMeshControlPlane:
+  name: basic
+  addons:
+    grafana:
+      enabled: false
+    kiali:
+      name: kiali-user-workload-monitoring
+    prometheus:
+      enabled: false
+  meshConfig:
+    extensionProviders:
+      # disable built-in prometheus and uses user-workload one
+      - name: prometheus
+        prometheus: {}
+      - name: tempo
+        zipkin:
+          port: 9411
+          service: tempo-tempo-distributor.tracing-system.svc.cluster.local
+      - name: "example-org-ext-authz-http"
+        envoyExtAuthzHttp:
+          service: "iam-auth-controller.iam-auth-controller.svc.cluster.local"
+          port: 7010
+          pathPrefix: /auth
+          includeRequestHeadersInCheck: ["authorization", "cookie","origin","accept"] # headers sent to the oauth2-proxy in the check request.
+          headersToUpstreamOnAllow: ["cookie","remote_user","user_object"] # headers sent to backend application when request is allowed.
+          headersToDownstreamOnAllow: ["set-cookie"] # headers sent back to the client when request is allowed.
+          headersToDownstreamOnDeny: ["content-type", "set-cookie", "location"] # headers sent back to the client when request is denied.
+          includeAdditionalHeadersInCheck:
+            X-Forwarded-Proto: '%REQ(:SCHEME)%'
+            X-Forwarded-Method: '%REQ(:METHOD)%'
+            X-Forwarded-Host: '%REQ(X-FORWARDED-FOR)%'
+            X-Forwarded-Uri: '%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%'
+            authorization: '%REQ(:AUTHORITY)%'
+  gateways:
+    ingress:
+      enabled: false
+    egress:
+      enabled: false
+  policy:
+    type: Istiod
+  telemetry:
+    type: Istiod
+  tracing:
+    sampling: 10000
+    type: None
+  version: v2.5
+  mode: ClusterWide
+
+serviceMeshMemberRoll:
+  name: default
+  memberSelectors: 
+    matchLabels:
+      istio-injection: enabled
+
+telemetry:
+  name: mesh-default
+  metrics:
+    providers:
+      - name: prometheus
+  tracing:
+    providers:
+      - name: tempo
+    randomSamplingPercentage: 100

@@ -1,0 +1,13 @@
+source:
+  image:
+    repository: registry.access.redhat.com/ubi9/nginx-120
+    tag: "1-146"
+
+target:
+  image:
+    registry: quay.io/example-org/registry-dev
+    path: todo-ui
+    tag: "1.0.0"
+    pushSecret: "quay-io"
+nameOverride: ""
+fullnameOverride: ""
