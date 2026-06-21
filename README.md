@@ -81,7 +81,7 @@ Beginner                    Intermediate              Advanced
 
 ## The Tutorials
 
-### [Tutorial 1: Building Reusable Helm Charts with a Library Chart](tutorial-1-helm-chart-reusability.md)
+### [Tutorial 1: Building Reusable Helm Charts with a Library Chart](./docs/tutorial-1-helm-chart-reusability.md)
 
 **Level:** Beginner · **Role:** Platform team
 
@@ -93,7 +93,7 @@ Ends with your first umbrella chart and the `file://` dependency pattern for loc
 
 ---
 
-### [Tutorial 2: Installing OpenShift Service Mesh as a Day-2 Component](tutorial-2-openshift-service-mesh.md)
+### [Tutorial 2: Installing OpenShift Service Mesh as a Day-2 Component](./docs/tutorial-2-openshift-service-mesh.md)
 
 **Level:** Intermediate · **Role:** Infra team
 
@@ -103,7 +103,7 @@ Start with *why* a service mesh exists — the networking problems microservices
 
 ---
 
-### [Tutorial 3: ArgoCD and GitOps — Automated Deployments for Infra and App Teams](tutorial-3-argocd-appset-service-mesh.md)
+### [Tutorial 3: ArgoCD and GitOps — Automated Deployments for Infra and App Teams](./docs/tutorial-3-argocd-appset-service-mesh.md)
 
 **Level:** Advanced · **Role:** Both teams
 
