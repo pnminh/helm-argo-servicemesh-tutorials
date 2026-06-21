@@ -743,8 +743,8 @@ helm template todo-api examples/appteam1/apps/todo-api
 
 ---
 
-**Where you are in the journey:** You now understand how Helm charts work — from a central library of reusable templates, through application charts that delegate to it, to umbrella charts that compose everything together.
+You've just learned how Helm charts work — from a central library of reusable templates, through application charts that delegate to it, to umbrella charts that compose everything together. You can now build charts that any team can pick up and use without copying a single template.
 
-**What comes next:** In Tutorial 2, you'll use the charts you just learned about to install a full OpenShift Service Mesh. The mesh provides the infrastructure layer (security, observability, traffic management) that your app charts will eventually plug into.
+In the next tutorial, you'll use these charts to install something much bigger than a single app: a full OpenShift Service Mesh. The mesh is the infrastructure layer that sits underneath every application, providing security, observability, and traffic management — all configured once by the infra team, consumed automatically by every app team.
 
 **Next:** [Tutorial 2 — Installing OpenShift Service Mesh as a Day-2 Component](tutorial-2-openshift-service-mesh.md)

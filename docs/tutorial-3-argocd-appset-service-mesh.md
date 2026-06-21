@@ -1,10 +1,10 @@
-# Tutorial 3: ArgoCD ApplicationSet for Infra Team Service Mesh
+# Tutorial 3: ArgoCD and GitOps — Automated Deployments for Infra and App Teams
 
 **Level:** Advanced  
 **Prerequisites:** [Tutorial 1 — Helm Chart Reusability](tutorial-1-helm-chart-reusability.md), [Tutorial 2 — Service Mesh Installation](tutorial-2-openshift-service-mesh.md)  
-**Goal:** Deploy and manage OpenShift Service Mesh across multiple clusters using ArgoCD ApplicationSet with sync-wave ordering, leveraging Helm charts from the `helm-charts/` folder.
+**Goal:** Understand GitOps from first principles, then automate deployments across multiple clusters using ArgoCD ApplicationSet with sync-wave ordering. The patterns you learn here work for both infrastructure services (like service mesh) and application deployments (like the todo stack).
 
-> **Where you are in the journey:** Tutorial 1 gave you the Helm chart toolbox. Tutorial 2 gave you the service mesh infrastructure. Now you'll automate the deployment of that infrastructure using GitOps — so the entire mesh stack is driven by git, not by manual `helm install` commands.
+Tutorial 1 gave you reusable Helm charts. Tutorial 2 gave you a working service mesh. Now you'll automate *everything* using GitOps — so whether it's infra operators or app deployments, the cluster is driven by what's in git, not by someone running commands from their laptop.
 
 ---
 
@@ -106,8 +106,9 @@ ArgoCD understands Kubernetes resources natively. When you point it at a git dir
 
 ### The Problem
 
-A service mesh installation requires multiple components that must be installed **in order**:
+Whether you're deploying infrastructure components or applications, real-world Kubernetes deployments involve multiple pieces that depend on each other:
 
+**Infra example — service mesh:**
 ```
 Operators (syncWave 0)
     │
@@ -121,14 +122,25 @@ Tracing / Kiali (syncWave 3)  ← must wait for SMCP to be ready
 Ingress Gateways (syncWave 4) ← must wait for SMCP to be ready
 ```
 
-Without an ApplicationSet:
-- You deploy each chart manually with Helm CLI — error-prone across clusters
+**App example — a multi-service application:**
+```
+Database (syncWave 0)
+    │
+    ▼
+API (syncWave 1)       ← must wait for database to be ready
+    │
+    ▼
+UI (syncWave 2)        ← must wait for API to be ready
+```
+
+The same pattern appears everywhere: components with dependencies need ordered deployment. Without an ApplicationSet:
+- You deploy each chart manually — error-prone across clusters
 - You rely on external orchestration (CI/CD pipelines) to handle ordering
-- Adding a new cluster requires duplicating configuration
+- Adding a new cluster or app means duplicating configuration
 
 ### The Solution
 
-**ArgoCD ApplicationSet** + **sync waves** + **umbrella Helm chart** gives you:
+**ArgoCD ApplicationSet** + **sync waves** + **umbrella Helm chart** solves this for any team:
 
 | Capability | How |
 |------------|-----|
@@ -142,26 +154,25 @@ Without an ApplicationSet:
 ## 4. Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                  ApplicationSet                      │
-│       (matrix: clusters × git directories)           │
-│                                                      │
-│   Generates one ArgoCD Application per cluster       │
-│   per component, with sync-wave annotations          │
-└────────────────────────┬────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────┐
-│              ArgoCD Application (per component)       │
-│                                                      │
-│  ┌─────────┐ ┌────────┐ ┌────────┐ ┌──────────────┐ │
-│  │operators│ │  smcp  │ │ tracing│ │  ingresses   │ │
-│  │wave: 0  │ │wave: 2 │ │wave: 3 │ │  wave: 4     │ │
-│  └─────────┘ └────────┘ └────────┘ └──────────────┘ │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                      ApplicationSet                                  │
+│                (matrix: clusters × git directories)                  │
+│                                                                      │
+│        Generates ArgoCD Applications for every combination           │
+│                                                                      │
+│   Infra team example:                App team example:               │
+│   ┌──────────┐ ┌────────┐           ┌──────────┐ ┌──────────┐      │
+│   │ operators│ │  smcp  │           │ todo-db  │ │ todo-api │      │
+│   │ wave: 0  │ │wave: 2 │           │ wave: 0  │ │ wave: 1  │      │
+│   └──────────┘ └────────┘           └──────────┘ └──────────┘      │
+│   ┌──────────┐ ┌──────────┐         ┌──────────┐                    │
+│   │ tracing  │ │ingresses │         │ todo-ui  │                    │
+│   │wave: 3   │ │wave: 4   │         │ wave: 2  │                    │
+│   └──────────┘ └──────────┘         └──────────┘                    │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-Each ArgoCD Application references a sub-directory of the git repo containing a Helm chart that deploys one component of the service mesh.
+Each ArgoCD Application points to a git directory containing a Helm chart for one component. The same ApplicationSet pattern serves both infra and app teams — only the values change.
 
 ---
 
@@ -229,39 +240,43 @@ Key behaviors:
 
 ### Values Format
 
+The `argo-applications` chart accepts any number of apps with any names — you define what makes sense for your team:
+
+**For an infra team deploying service mesh:**
+
 ```yaml
 argo-applications:
-  gitRepoUrl: https://github.example-org.com/gitops/day2-services.git
-  gitTargetRevision: multi-clusters
-  argoProject: default
-  namespace: argocd
   appsDir: apps/service-mesh/dev/apps
   apps:
     operators:
       namespace: openshift-operators
-      enabled: true
       syncWave: 0
     smcp:
       namespace: istio-system
-      enabled: true
       syncWave: 2
-    tracing-system:
-      namespace: tracing-system
-      enabled: true
-      syncWave: 3
-    kiali:
-      namespace: istio-system
-      enabled: true
-      syncWave: 3
     ingresses:
       namespace: mesh
-      enabled: true
-      syncWave: 4
-    sample-app:
-      namespace: bookinfo
-      enabled: true
       syncWave: 4
 ```
+
+**For an app team deploying a multi-service stack:**
+
+```yaml
+argo-applications:
+  appsDir: apps/myapp/dev/apps
+  apps:
+    database:
+      namespace: myapp-data
+      syncWave: 0
+    api:
+      namespace: myapp-api
+      syncWave: 1
+    frontend:
+      namespace: myapp-web
+      syncWave: 2
+```
+
+The chart doesn't care what you name your apps or what they deploy — it just generates one ArgoCD Application per entry.
 
 ---
 
@@ -353,9 +368,9 @@ Generated Applications:
 
 ## 7. Sync Wave Ordering Strategy
 
-Sync waves control **what deploys when**. This is critical for service mesh because components have dependencies:
+Sync waves control **what deploys when**. The specific numbering depends on your dependencies, but the principle is the same for both infra and app teams:
 
-### The Sync Wave Plan
+### Example: Infra Team (Service Mesh)
 
 | SyncWave | Components | Depends On | Rationale |
 |----------|-----------|------------|-----------|
@@ -364,6 +379,16 @@ Sync waves control **what deploys when**. This is critical for service mesh beca
 | **2** | `smcp` | operators | SMCP needs the OSSM operator to be running and CRDs registered |
 | **3** | `tracing-system`, `kiali` | smcp | Tempo/Kiali need the mesh to be ready; they configure tracing/monitoring |
 | **4** | `ingresses`, `sample-app` | smcp | Gateways and sample apps need the control plane to be running |
+
+### Example: App Team (Multi-Service Application)
+
+| SyncWave | Components | Depends On | Rationale |
+|----------|-----------|------------|-----------|
+| **0** | `database` | — | Services can't start without data stores |
+| **1** | `api` | database | API needs the database to be running |
+| **2** | `frontend`, `worker` | api | Frontend/workers need the API to be reachable |
+
+The same pattern applies: lower waves deploy first, higher waves wait their turn. Whether it's infrastructure or an application, the mechanics are identical.
 
 ### What Sync Waves Do (and Don't Do)
 
@@ -399,9 +424,11 @@ This results in ArgoCD processing applications in ascending wave order:
 
 ## 8. Putting It Together: The Umbrella Chart
 
-The **umbrella chart** at `examples/infra/apps/service-mesh/dev/` ties everything together.
+The **umbrella chart** ties the `argo-applications` chart together with component-specific values. Our repo has a concrete example for infra (service mesh), but the same structure works for app teams.
 
-### Directory Structure
+### For the Infra Team (Service Mesh)
+
+The umbrella at `examples/infra/apps/service-mesh/dev/`:
 
 ```
 examples/infra/apps/service-mesh/
@@ -425,7 +452,20 @@ examples/infra/apps/service-mesh/
             └── ...         ← depends on app-servicemesh + sm-ingress
 ```
 
-### Umbrella Chart Dependencies
+### For App Teams
+
+An app team would use the exact same structure — just different app names and namespaces:
+
+```
+apps/my-stack/              ← you choose the name
+└── dev/
+    ├── Chart.yaml          ← depends on argo-applications + library-chart (same as infra)
+    ├── values.yaml         ← defines database, api, frontend with their sync waves
+    └── apps/               ← one sub-directory per service
+        └── database/, api/, frontend/
+```
+
+### Umbrella Dependencies (Both Teams)
 
 File: `examples/infra/apps/service-mesh/dev/Chart.yaml`
 
@@ -677,8 +717,6 @@ oc argocd app sync day2-operators-<cluster-name>
 
 ---
 
-**Where you are in the journey:** You've automated the service mesh deployment with GitOps. The ApplicationSet + umbrella chart pattern means adding a new cluster is as simple as adding a directory to git.
+**What comes next:** Tutorial 4 is the capstone. You'll take everything from these three tutorials — Helm charts, service mesh, GitOps patterns — and use them to deploy a real application stack. It's hands-on from start to finish: deploy a database, API, and UI, plug them into the mesh, trigger a blue-green rollout, and deploy to multiple environments.
 
-**What comes next:** Tutorial 4 is the capstone — you'll apply everything (Helm charts from Tutorial 1, service mesh from Tutorial 2, environment strategy from Tutorial 3) to deploy a real three-tier todo application stack. It's hands-on: read values, deploy, verify, and check your understanding at every step.
-
-**Next:** [Tutorial 4 — Deploying a Todo App Stack with Helm Charts](tutorial-4-appteam-todo-app.md)
+**Next:** [Tutorial 4 — Capstone: Deploying a Todo App Stack](tutorial-4-appteam-todo-app.md)

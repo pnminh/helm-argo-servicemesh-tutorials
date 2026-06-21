@@ -4,7 +4,7 @@
 **Prerequisite:** [Tutorial 1 — Helm Chart Reusability](tutorial-1-helm-chart-reusability.md)  
 **Goal:** Deploy a full OpenShift Service Mesh stack (operators, SMCP, telemetry, ingress gateways) using Helm charts from the `helm-charts/` folder.
 
-> **Where you are in the journey:** Tutorial 1 gave you the toolbox — reusable Helm charts that let any team deploy apps consistently. Now you'll install the infrastructure layer that sits underneath those apps: the service mesh. This is where the infra team takes over, setting up security, observability, and traffic management so app teams don't have to.
+Tutorial 1 gave you the toolbox: reusable Helm charts that let any team deploy apps consistently. Now you'll install the infrastructure layer that sits underneath those apps — the service mesh. This is where the infra team takes over, setting up security, observability, and traffic management so app teams don't have to think about it.
 
 ---
 
@@ -639,8 +639,8 @@ oc get pods -n my-namespace -w
 
 ---
 
-**Where you are in the journey:** You've installed the service mesh infrastructure layer. Operators, SMCP, Tempo, Kiali, and ingress gateways are all running.
+You now have a working service mesh. Operators, SMCP, Tempo, Kiali, and ingress gateways are all running. But running `helm install` commands by hand won't scale — especially if you have multiple clusters.
 
-**What comes next:** In Tutorial 3, you'll automate this entire installation using ArgoCD. Instead of running `helm install` commands by hand, you'll define the desired state in git and let ArgoCD deploy it to multiple clusters — with proper ordering via sync waves.
+In the next tutorial, you'll take everything you just deployed and put it under GitOps. Instead of you pushing commands to the cluster, ArgoCD will pull the desired state from git and keep your mesh in sync automatically. One `git push` and ArgoCD handles the rest — across as many clusters as you have.
 
-**Next:** [Tutorial 3 — ArgoCD ApplicationSet for Infra Team Service Mesh](tutorial-3-argocd-appset-service-mesh.md)
+**Next:** [Tutorial 3 — ArgoCD and GitOps](tutorial-3-argocd-appset-service-mesh.md)

@@ -4,7 +4,7 @@
 **Prerequisites:** [Tutorial 1](tutorial-1-helm-chart-reusability.md) (Helm charts), [Tutorial 2](tutorial-2-openshift-service-mesh.md) (Service mesh), [Tutorial 3](tutorial-3-argocd-appset-service-mesh.md) (ArgoCD/GitOps)  
 **Goal:** Apply everything you've learned by deploying a three-tier todo application on OpenShift — with Helm umbrella charts, service mesh integration, and blue-green deployment — using the exact patterns and charts from `helm-charts/`.
 
-> **Where you are in the journey:** This is the capstone. Tutorial 1 taught you reusable Helm charts. Tutorial 2 gave you a service mesh infrastructure. Tutorial 3 showed you how to automate it all with GitOps. Now you'll stand in the shoes of an app team and deploy a real application stack on top of everything that's been built.
+This is the capstone. Tutorial 1 taught you reusable Helm charts. Tutorial 2 gave you a service mesh. Tutorial 3 showed you how to automate it all with GitOps. Now you'll stand in the shoes of an app team and deploy a real stack on top of everything that's been built.
 
 ---
 
@@ -476,9 +476,9 @@ oc get pods -n todo-dev -l app=my-new-service
 |---------|---------------|-------------|
 | Tutorial 1 | A reusable Helm chart library (`library-chart`) and application charts (`app-deployment`) | Platform team — write templates once, reuse everywhere |
 | Tutorial 2 | A full OpenShift Service Mesh (operators, SMCP, Tempo, Kiali, gateways) | Infra team — security, observability, and traffic management as a shared layer |
-| Tutorial 3 | An ArgoCD ApplicationSet that deploys the mesh to multiple clusters with sync-wave ordering | Infra team — GitOps automation, single source of truth, disaster recovery |
+| Tutorial 3 | An ArgoCD ApplicationSet with GitOps — deploys and manages any workload, infra or apps, with sync-wave ordering | Both teams — single source of truth, automated recovery, no manual cluster access |
 | Tutorial 4 | A three-tier todo app stack (DB + API + UI) with service mesh and blue-green deployment | App teams — deploy apps without worrying about networking, security, or deployment strategies |
 
 **The big picture:** The platform team writes reusable Helm charts. The infra team installs a service mesh and automates it with GitOps. App teams deploy their apps on top — with consistent security, observability, and deployment strategies — using a simple `values.yaml`. No app code changes needed.
 
-**Previous:** [Tutorial 3 — ArgoCD ApplicationSet for Infra Team Service Mesh](tutorial-3-argocd-appset-service-mesh.md)
+**Previous:** [Tutorial 3 — ArgoCD and GitOps](tutorial-3-argocd-appset-service-mesh.md)
